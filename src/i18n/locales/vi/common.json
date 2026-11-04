@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Moldy Market",
+    "tagline": "Mua bán đồ cũ ưng ý, an tâm giao dịch."
+  },
+  "actions": {
+    "buyNow": "Mua ngay",
+    "save": "Lưu",
+    "cancel": "Hủy"
+  },
+  "language": {
+    "label": "Ngôn ngữ",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Moldy Market",
+    "tagline": "Find great second-hand deals and trade with confidence."
+  },
+  "actions": {
+    "buyNow": "Buy now",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "language": {
+    "label": "Language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  }
+}
