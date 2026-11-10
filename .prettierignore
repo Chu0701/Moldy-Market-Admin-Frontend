@@ -2,3 +2,7 @@ dist
 node_modules
 package-lock.json
 src/components/ui
+
+# Keep reference documentation and local agent guidance outside application formatting.
+Moldy-Market-Admin-Frontend/docs
+admin
