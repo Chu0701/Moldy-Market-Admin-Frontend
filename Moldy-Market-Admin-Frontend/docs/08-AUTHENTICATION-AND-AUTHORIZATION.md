@@ -1,25 +1,26 @@
 # 08 - Authentication and Authorization (Xác thực và phân quyền)
 
-> **Trạng thái:** BẢN NHÁP v0.1
-> **Cập nhật:** 2026-11-08
+> **Trạng thái:** v0.2 (cập nhật 2026-11-22: đồng bộ quyết định auth từ `HANDOFF-ADMIN-FRONTEND.md` & Backend HttpOnly cookie + OTP)
+> **Cập nhật:** 2026-11-22
 > **Áp dụng cho:** `Moldy-Market-Admin-Frontend`
 > **Mục đích:** Mô tả cách ứng dụng quản trị đăng nhập, giữ phiên, làm mới token, và chỉ cho phép người có role `ADMIN` vào khu quản trị, dựa trên cách Backend thật sự hoạt động.
 
 Nhãn dùng trong tài liệu:
 - `[ĐÃ XÁC MINH BACKEND]`: có trong doc 14.
 - `[ĐÃ CẤU HÌNH]`: đã thật sự có trong repo.
-- `[ĐỀ XUẤT]`: kiến trúc dự kiến, **chưa có code**. Mọi tên hook, store, guard, hàm trong tài liệu này là `[ĐỀ XUẤT]`. Các đoạn code là ví dụ minh họa, chưa có trong repo.
+- `[ĐỀ XUẤT]`: kiến trúc dự kiến, **chưa có code** (Admin repo hiện mới ở scaffold).
 
-Hai quyết định **CHƯA CHỐT**:
-- **Q2**: lưu token ở đâu (mục 4).
-- **Q1**: Frontend không đọc được permission code của user (mục 7).
+> **Quyết định đã chốt (2026-11-21 — xem `HANDOFF-ADMIN-FRONTEND.md`):**
+> - **Q2 (đã chốt):** Access token lưu `localStorage` qua `src/lib/tokenStorage.js` với namespace riêng **`moldy-market:admin:access-token`**; refresh token là **HttpOnly cookie `moldy_refresh`** do Backend set (`withCredentials: true`, header `X-Moldy-Auth: 1`). Không đọc/ghi refresh cookie từ JS và không dùng `zustand` để giữ access token.
+> - **Q1 (đã giải quyết):** `GET /api/v1/users/me` trả `roles`, `permissions`, `storeId`. Cổng vào Admin yêu cầu `roles.includes('ADMIN')`.
+> - **B10 (đã giải quyết):** Tài khoản người dùng tự kích hoạt bằng Email OTP; **Admin không được bypass OTP** để chuyển `PENDING_VERIFICATION` sang `ACTIVE`.
 
 ---
 
 ## 1. Hiện trạng
 
-- `[ĐÃ CẤU HÌNH]` Đã cài `axios`, `zustand`, `react-router`, `@tanstack/react-query`, `react-hook-form`, `zod`. Thư mục `src/services/auth`, `src/features/auth/*`, `src/state`, `src/app/router` đã tạo nhưng **trống**.
-- Chưa có Axios instance, interceptor, store, guard, trang đăng nhập nào.
+- `[ĐÃ CẤU HÌNH]` Đã cài `axios`, `zustand`, `react-router`, `@tanstack/react-query`, `react-hook-form`, `zod`, Vitest + RTL, CI. Thư mục `src/services/auth`, `src/features/auth/*`, `src/state`, `src/app/router` đã tạo nhưng **trống** (`.gitkeep`).
+- Chưa có Axios instance, interceptor, `tokenStorage`, guard hay trang đăng nhập (port có chọn lọc từ baseline User Frontend theo `HANDOFF-ADMIN-FRONTEND.md`).
 
 Khác với User Frontend: **Admin không có đăng ký, không có tự mở tài khoản**. Chỉ có một cửa vào là `/login`, và chỉ người có role `ADMIN` mới dùng được ứng dụng này.
 
@@ -27,20 +28,18 @@ Khác với User Frontend: **Admin không có đăng ký, không có tự mở t
 
 ## 2. Backend thật sự làm gì `[ĐÃ XÁC MINH BACKEND]`
 
-Trích từ doc 14 mục 2.5, 3.1 đến 3.5. Admin dùng cùng các endpoint xác thực với User Frontend (Backend không có endpoint đăng nhập riêng cho admin).
+Trích từ doc 14 mục 2.5, 3.1 đến 3.5. Admin dùng cùng các endpoint xác thực với User Frontend.
 
 | Chủ đề | Sự thật |
 |---|---|
-| Đăng nhập | `POST /api/v1/auth/login`, body `{ email(tối đa 254), password }`, trả `{ userId, email, fullName, accessToken, refreshToken, tokenType }`. **Không trả role.** |
-| Refresh | `POST /api/v1/auth/refresh`, body `{ refreshToken }`, trả giống login. |
-| Logout | `POST /api/v1/auth/logout`, body `{ refreshToken }`, không có `data`. Chỉ thu hồi phiên của refresh token gửi lên. |
-| Thời hạn | Access token 15 phút, refresh token 30 ngày (**chỉ xác minh ở profile local**). |
+| Đăng nhập | `POST /api/v1/auth/login`, bắt buộc header `X-Moldy-Auth: 1` + `withCredentials: true`, body `{ email(<=254), password }`, trả `AccessTokenResponse { userId, email, fullName, accessToken, tokenType }` + `Set-Cookie: moldy_refresh` (`HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/v1/auth`). **Không trả role hay `refreshToken` trong JSON.** |
+| Refresh | `POST /api/v1/auth/refresh`, header `X-Moldy-Auth: 1` + `withCredentials: true`, body `undefined`. Đọc cookie `moldy_refresh`, trả `AccessTokenResponse` mới + xoay vòng cookie. |
+| Logout | `POST /api/v1/auth/logout`, header `X-Moldy-Auth: 1` + `withCredentials: true`, body `undefined`. Thu hồi phiên hiện tại và xóa cookie `moldy_refresh`. |
+| Thời hạn | Access token 15 phút, refresh token 30 ngày (profile local). |
 | Claim JWT | `sub`, `email`, `tokenType = "ACCESS"`. Không có role hay permission. |
 | Xoay vòng | Mỗi lần refresh, token cũ bị thu hồi. Dùng lại token đã thu hồi: `AUTH_007` và Backend **thu hồi mọi phiên** của user. |
-| Role | `GET /api/v1/users/me` trả `roles: string[]`. Tên role: `USER`, `APPRAISER`, `STAFF`, `ADMIN`, `OWNER`. |
-| Permission code | **Không có endpoint nào trả cho Frontend** (Q1). |
-| Quyền khu admin | `@PreAuthorize` theo permission: `USER_STORE_MANAGE` (user, store), `PRODUCT_MODERATE`, `CATEGORY_MANAGE`. Permission `ADMIN_PORTAL_ACCESS` tồn tại nhưng Frontend không đọc được. |
-| Tài khoản admin | Được tạo sẵn lúc khởi động (`RoleInitializer`, trạng thái `ACTIVE`). Đây là cách đáng tin duy nhất để có admin hiện nay (B10). |
+| Role & Permission | `GET /api/v1/users/me` trả `roles: string[]`, `permissions: string[]`, `storeId`. Quyền khu admin: `USER_STORE_MANAGE`, `PRODUCT_MODERATE`, `CATEGORY_MANAGE`, `@IsAdmin`. |
+| Tài khoản admin | Được tạo sẵn lúc khởi động (`RoleInitializer`, trạng thái `ACTIVE`). |
 
 Mã lỗi quan trọng:
 
@@ -48,44 +47,26 @@ Mã lỗi quan trọng:
 |---|---|---|---|
 | `AUTH_001` | 401 | Sai email hoặc mật khẩu | Lỗi ở form đăng nhập, **không** refresh |
 | `AUTH_003` / `AUTH_004` | 403 | Tài khoản bị khóa / bị vô hiệu | Thông báo, không vào được |
-| `AUTH_005` / `AUTH_006` | 401 | Refresh token không hợp lệ / hết hạn | Xóa phiên, về `/login` |
-| `AUTH_007` | 401 | Refresh token bị dùng lại, mọi phiên bị thu hồi | Xóa phiên, về `/login`, thông báo riêng |
-| `COMMON_003` | 401 | Cần đăng nhập | Refresh một lần (mục 6) |
-| `COMMON_004` | 403 | Không đủ quyền | Hiện "không có quyền", **không** xóa phiên |
+| `AUTH_005` / `AUTH_006` / `AUTH_007` | 401 | Refresh token không hợp lệ / hết hạn / bị dùng lại | Xóa access token, xóa Query cache, về `/login` |
+| `COMMON_003` | 401 | Cần đăng nhập / Access token hết hạn | Refresh một lần (single-flight) |
+| `COMMON_004` | 403 | Không đủ quyền | Hiện `ForbiddenState`, **không** xóa phiên, **không** refresh |
 | `COMMON_009` | 429 | Quá nhiều request | Thông báo thử lại sau |
-
-Khi đăng nhập một tài khoản chưa `ACTIVE`, doc 14 mục 3.5 ghi Backend trả `ACCOUNT_DISABLED` (chưa xác định là `AUTH_003` hay `AUTH_004`; phải thử thật).
 
 ---
 
-## 3. Mô hình phiên `[ĐỀ XUẤT]`
+## 3. Mô hình phiên `[ĐỀ XUẤT — ĐÃ CHỐT TRONG HANDOFF]`
 
-### 3.1 Ba nơi giữ thông tin
+### 3.1 Hai nơi giữ thông tin
 
 | Thông tin | Nơi giữ | Lý do |
 |---|---|---|
-| Access token | Bộ nhớ (store Zustand **không persist**) | Sống 15 phút; không nằm trong storage nên ít bị lộ khi có XSS |
-| Refresh token | Qua một module duy nhất `lib/tokenStorage.js`, nơi lưu **CHƯA CHỐT** (Q2, mục 4) | Một chỗ để đổi |
-| Thông tin user (`fullName`, `roles`...) | **TanStack Query**, key `['users','me']` | Dữ liệu từ server không để trong Zustand (doc 09) |
-
-```js
-// src/state/authStore.js (ví dụ minh họa, chưa có trong repo)
-import { create } from 'zustand'
-
-// status: 'unknown' (đang khôi phục phiên) | 'authenticated' | 'anonymous'
-export const useAuthStore = create((set) => ({
-  status: 'unknown',
-  accessToken: null,
-  setAccessToken: (accessToken) => set({ accessToken, status: 'authenticated' }),
-  clearSession: () => set({ accessToken: null, status: 'anonymous' }),
-}))
-
-export const getAccessToken = () => useAuthStore.getState().accessToken
-```
+| Access token | `src/lib/tokenStorage.js` (`localStorage`, key **`moldy-market:admin:access-token`**) | Tách namespace với User app (`moldy-market:user:access-token`); không dùng Zustand để lưu token |
+| Refresh token | **HttpOnly cookie `moldy_refresh`** do Backend quản lý | JavaScript không đọc/ghi trực tiếp; gửi qua `withCredentials: true` trên `/api/v1/auth/*` |
+| Thông tin user (`fullName`, `roles`, `permissions`) | **TanStack Query**, key `['users', 'me']` | Dữ liệu từ server không để trong Zustand (doc 09) |
 
 ### 3.2 Phiên chỉ hợp lệ với admin
 
-Khác User Frontend, trạng thái "đã đăng nhập" của Admin **chưa đủ**: phải kèm role `ADMIN`. Vì vậy `status === 'authenticated'` chỉ được đặt sau khi `GET /api/v1/users/me` xác nhận có `ADMIN`. Nếu đặt sớm hơn, ứng dụng có thể hiện giao diện admin trong tích tắc cho người không phải admin.
+Trạng thái "đã đăng nhập" của Admin **chưa đủ**: phải kiểm tra `roles.includes('ADMIN')` từ `GET /api/v1/users/me`. Nếu không có role `ADMIN`: gọi `POST /api/v1/auth/logout` (`withCredentials: true`, `X-Moldy-Auth: 1`), xóa access token và Query cache ngay lập tức, rồi hiển thị thông báo từ chối truy cập. *(Lưu ý: vì HttpOnly cookie không phân biệt port khi chạy 2 app trên cùng host, khi test đồng thời User + Admin nên dùng 2 browser profile/incognito riêng).*
 
 ### 3.3 Đăng nhập và kiểm tra role
 

@@ -31,7 +31,7 @@ Alias `@` = `src`. Dev proxy: `/api` -> `API_PROXY_TARGET` (default http://local
 
 1. Only write a service/hook for endpoints marked IMPLEMENTED in doc 14. For IN_PROGRESS/PLANNED/NOT_FOUND build UI skeleton + `TODO(doc14:<id>)` only, no fake API calls, no mock endpoints, no invented DTOs/enums/permissions.
 2. Frontend is not a security boundary. Backend 401/403 is final. Hide UI by role only as UX.
-3. Token storage (Q2) and permission discovery (Q1) are UNDECIDED. Do not choose silently: stop and ask the owner, or implement behind a single swappable module `src/lib/tokenStorage.js`.
+3. Access token storage is resolved: use `src/lib/tokenStorage.js` with Admin namespace **`moldy-market:admin:access-token`** in `localStorage`; refresh token is a Backend-set HttpOnly cookie (`moldy_refresh`) using `withCredentials: true` and `X-Moldy-Auth: 1`. Session roles/permissions come from `GET /api/v1/users/me` (`meQueryKey = ['users', 'me']`). Admin entry requires `roles.includes('ADMIN')`. Do not scatter storage calls.
 4. Payment: never mark success on the client; trust only `paymentStatus === "SUCCESSFUL"` from polling. QR is Backend's `qrBankUrl`.
 5. Update with `version` for products (409 `COMMON_010` = stale data, refetch).
 6. UI text only through i18n keys (vi first, en mirrored). Do not translate Backend enums/codes; map them to keys.
@@ -52,14 +52,12 @@ Alias `@` = `src`. Dev proxy: `/api` -> `API_PROXY_TARGET` (default http://local
 - Env/build: `12`; order of work: `13-DEVELOPMENT-ROADMAP.md`; PR rules: `15-CONTRIBUTING.md`
 - Backend truth (endpoints, DTO limits, error codes, Bn issues, Qn questions): `14-BACKEND-INTEGRATION-MATRIX.md`
 
-## Project state (2026-11-10)
+## Project state (2026-11-22)
 
-DONE: both repos scaffolded and configured (Vite, Tailwind 4 tokens, fonts, shadcn init + button, ESLint/Prettier, alias, proxy, i18n vi/en base, env, Node 22, editorconfig), base folder structure, 15 docs per repo (Vietnamese, status DRAFT v0.1).
-IN PROGRESS / VERIFY: Vitest + RTL config (check `package.json`, `src/test/setup.js`, `vite.config.js` `test` block).
-NOT DONE (config): `index.html` metadata (lang vi, title, favicon), GitHub Actions CI (lint, format:check, test, build), PR template.
-NOT DONE (code): everything. `src/main.jsx` renders a trial `App.jsx`. No router, providers, layouts, Logo, Axios instance, services, hooks, stores, schemas, pages, tests.
-Suggested code order (doc 13): 1) app skeleton (providers, router, AdminLayout with sidebar+header, NotFound, Axios client, unwrap, ApiError); 2) login with ADMIN role check, session bootstrap, guards; 3) users list/detail/status; 4) stores list/status; 5) product moderation (remove with reason, restore); 6) categories tree CRUD. Dashboard/transactions/escrow/vouchers/appraisers/reports are skeleton only (no API). Admin has no order-list endpoint.
-Known blockers/decisions: B10 new accounts are PENDING_VERIFICATION and cannot log in (admin must set ACTIVE; use the seeded admin or an admin-activated test user); Q1 no endpoint exposes permission codes (use role names from `/users/me` for UX, 403 is truth); Q2 token storage undecided; Q19 no verified endpoint to list "my personal products"; B12 order/checkout status not updated after payment (poll payment only); chat/cart/order/payment/notification/pricing/voucher/escrow are IN_PROGRESS on unmerged Backend branches: no code yet; offer/wishlist/follow/review/stats/image upload are NOT_FOUND; product images accept https URLs only (Q5); checkout has no `quantity` (one item per used product, team decision).
+DONE (scaffold & config): Vite, React 19, Tailwind 4 tokens, fonts, shadcn (`button`), ESLint 10, Prettier, Vitest + RTL (`passWithNoTests: true`, 0 test files so far), `index.html` metadata + favicon, GitHub Actions CI, PR template, alias, `/api` proxy, i18n `vi`/`en` base (8 keys, 100% parity), Node 22, editorconfig, base folder structure (`.gitkeep`), 15 docs + `HANDOFF-ADMIN-FRONTEND.md`.
+NOT DONE (app code): everything. `src/main.jsx` still renders trial `App.jsx`. No router, providers, layouts (`AuthLayout`, `AdminLayout`), Axios client, `tokenStorage`, auth hooks, services, pages, or unit tests yet.
+Approved Admin MVP order (see `HANDOFF-ADMIN-FRONTEND.md` & doc 13): 1) App shell + Admin session (`RequireAdmin`, selectively port core HTTP/auth infra from User FE baseline with `moldy-market:admin:access-token`); 2) Users (`/users`, `/users/:userId` — **Admin must NOT bypass Email OTP** to activate `PENDING_VERIFICATION`); 3) Stores (`/stores`, `/stores/:storeId`); 4) Product moderation (`/products`, `/products/:productId`); 5) Categories (`/categories` tree CRUD).
+Post-MVP (audit contract first): Admin orders (`start-shipping`/`mark-delivered`/`cod-collected` exist with `@IsAdmin`, but no global admin order-list API yet), Appraiser admin (`/api/v1/admin/appraisers/**`, `hasRole('ADMIN')`), Vouchers (`/api/admin/vouchers`, `@IsAdmin`), Reference Prices (`/api/admin/reference-prices`, `@IsAdmin`), Wallet/Escrow/Withdrawal (**B2 still open**: no `@PreAuthorize`). Dashboard analytics, disputes/refunds, reports, settings are `NOT_FOUND` (skeleton only).
 
 ## Skills
 
