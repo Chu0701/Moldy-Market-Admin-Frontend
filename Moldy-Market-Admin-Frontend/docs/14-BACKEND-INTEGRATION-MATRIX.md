@@ -487,6 +487,12 @@ OrderResponse {
 
 ## 8. Bảo trì tài liệu
 
+### Ghi nhận khi bàn giao Admin — 2026-11-21
+
+Decision update sau khi Chu trả lời “duyệt 4 điểm” ngày 2026-11-21: MVP Admin theo thứ tự auth/ADMIN guard → users → stores → product moderation → categories; các module khác để sau contract audit. Chưa cho admin bypass email OTP để kích hoạt PENDING_VERIFICATION; admin UI không có action thay xác minh email. Đây là BUSINESS_APPROVED, chưa audit/sửa enforcement admin status endpoint trong task này. Appraiser bị chặn hàng của bản thân/shop sở hữu/shop đang làm staff, Backend implementation/test pending. Baseline sẽ review/tách commit và trình duyệt trước commit/push; chưa có shared baseline commit mới.
+
+Xem [HANDOFF-ADMIN-FRONTEND.md](HANDOFF-ADMIN-FRONTEND.md). Snapshot auth/token/OTP cũ trong tài liệu và AGENTS phải đọc cùng decision cập nhật: access token localStorage theo namespace từng app, refresh HttpOnly cookie Backend set; email OTP hợp lệ kích hoạt ngay, user tự login. Không mặc định admin duyệt mọi đăng ký mới. Đã đối chiếu scoped local Backend `dc11b09`: UserSummaryResponse không có roles, UpdateUserStatusRequest là {status}; PaginationConfig request Pageable 1-based và PagedResponse.page 1-based. OrderController hiện có @IsAdmin PATCH /api/v1/orders/admin/{orderId}/start-shipping, PATCH .../mark-delivered và POST .../cod-collected; chưa xác minh nguồn admin order-list/detail nên không dùng buyer/store API thay thế. Appraisal hiện là module requests/applications/invitations/assignments/reports/reviews, application không phải hồ sơ xin role Appraiser. Các ghi nhận source này chưa phải HTTP/security audit đầy đủ hoặc trạng thái Frontend INTEGRATED; cần cập nhật từng contract trong task triển khai. Không sửa Backend trong lần bàn giao.
+
 - Cập nhật tài liệu này **trong cùng Pull Request** mỗi khi một branch Backend được merge hoặc một Frontend service được thêm.
 - Khi một dòng đổi trạng thái, ghi lại commit hoặc PR của Backend làm căn cứ.
 - Giữ file này giống hệt nhau ở cả hai repo Frontend.
