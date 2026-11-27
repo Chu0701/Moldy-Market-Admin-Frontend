@@ -1,16 +1,283 @@
 {
   "app": {
-    "name": "Moldy Market",
-    "tagline": "Mua bán đồ cũ ưng ý, an tâm giao dịch."
+    "name": "Moldy Market Admin",
+    "tagline": "Cổng quản trị sàn giao dịch đồ cũ ký quỹ."
   },
   "actions": {
     "buyNow": "Mua ngay",
     "save": "Lưu",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "refresh": "Làm mới",
+    "retry": "Thử lại",
+    "submitting": "Đang xử lý...",
+    "close": "Đóng",
+    "copied": "Đã sao chép",
+    "copyValue": "Sao chép {{value}}"
   },
   "language": {
     "label": "Ngôn ngữ",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "nav": {
+    "ariaLabel": "Điều hướng quản trị",
+    "openMenu": "Mở menu điều hướng",
+    "dashboard": "Tổng quan",
+    "disputes": "Khiếu nại & hoàn tiền",
+    "withdrawals": "Duyệt rút tiền",
+    "vouchers": "Voucher toàn sàn"
+  },
+  "dashboard": {
+    "title": "Khu vực quản trị",
+    "subtitle": "Chọn một phân hệ bên dưới hoặc từ thanh điều hướng bên trái để thao tác.",
+    "openModule": "Mở màn hình"
+  },
+  "feedback": {
+    "loading": "Đang tải trang...",
+    "forbiddenTitle": "Không đủ quyền truy cập",
+    "forbiddenMessage": "Tài khoản của bạn không có quyền thực hiện thao tác hoặc xem mục này."
+  },
+  "errors": {
+    "default": "Không thể hoàn tất yêu cầu. Vui lòng thử lại sau.",
+    "FE_NETWORK_ERROR": "Không thể kết nối tới máy chủ. Vui lòng kiểm tra mạng và thử lại.",
+    "FE_UNKNOWN_ERROR": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
+    "COMMON_003": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+    "COMMON_004": "Bạn không có quyền thực hiện thao tác này.",
+    "DISPUTE_001": "Không tìm thấy yêu cầu khiếu nại này.",
+    "DISPUTE_005": "Khiếu nại không còn ở trạng thái cho phép xử lý.",
+    "WALLET_005": "Không tìm thấy yêu cầu rút tiền này.",
+    "WALLET_006": "Trạng thái yêu cầu rút tiền không hợp lệ cho thao tác này.",
+    "VOUCHER_001": "Không tìm thấy mã voucher.",
+    "VOUCHER_002": "Mã voucher này đã tồn tại trong hệ thống.",
+    "INVALID_REQUEST": "Dữ liệu gửi lên chưa hợp lệ. Vui lòng kiểm tra lại."
+  },
+  "disputes": {
+    "title": "Xử lý khiếu nại & hoàn tiền",
+    "subtitle": "Xem xét bằng chứng giao dịch và ra quyết định hoàn tiền ký quỹ hoặc giữ kết quả đơn hàng.",
+    "tabsLabel": "Lọc khiếu nại theo trạng thái",
+    "searchPlaceholder": "Tìm theo mã đơn, tên sản phẩm...",
+    "loadError": "Không thể tải danh sách khiếu nại",
+    "emptyTitle": "Chưa có khiếu nại phù hợp",
+    "emptyDescription": "Hiện không có yêu cầu khiếu nại nào khớp với bộ lọc đang chọn.",
+    "untitledItem": "Sản phẩm không có tên",
+    "tabs": {
+      "ALL": "Tất cả",
+      "PENDING": "Chờ xử lý",
+      "APPROVED": "Đã duyệt",
+      "REJECTED": "Đã từ chối",
+      "CANCELLED": "Đã hủy"
+    },
+    "columns": {
+      "order": "Đơn hàng / Sản phẩm",
+      "reason": "Lý do",
+      "amount": "Giá trị đơn",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "action": "Thao tác"
+    },
+    "status": {
+      "OPEN": "Mới mở",
+      "PENDING_APPROVAL": "Chờ duyệt",
+      "APPROVED": "Đã hoàn tiền",
+      "REJECTED": "Đã từ chối",
+      "CANCELLED": "Người mua đã hủy"
+    },
+    "reason": {
+      "ITEM_NOT_RECEIVED": "Chưa nhận được hàng",
+      "NOT_AS_DESCRIBED": "Không đúng mô tả",
+      "DAMAGED": "Hàng bị hư hỏng",
+      "WRONG_ITEM": "Giao sai sản phẩm",
+      "OTHER": "Lý do khác"
+    },
+    "actions": {
+      "review": "Xử lý",
+      "view": "Xem chi tiết"
+    },
+    "decision": {
+      "APPROVE": "Chấp thuận & hoàn tiền",
+      "APPROVE_DESC": "Hoàn toàn bộ tiền ký quỹ của đơn về ví người mua.",
+      "REJECT": "Từ chối khiếu nại",
+      "REJECT_DESC": "Giữ nguyên giao dịch và hoàn tất đơn hàng cho người bán."
+    },
+    "validation": {
+      "decisionRequired": "Vui lòng chọn quyết định xử lý.",
+      "noteRequired": "Vui lòng nhập ghi chú quyết định cho hai bên.",
+      "noteMax": "Ghi chú không được vượt quá 1000 ký tự."
+    },
+    "detail": {
+      "backToList": "Quay lại danh sách khiếu nại",
+      "title": "Chi tiết khiếu nại",
+      "createdAt": "Tạo lúc",
+      "loadError": "Không thể tải chi tiết khiếu nại",
+      "infoTitle": "Thông tin đơn hàng & khiếu nại",
+      "disputeId": "Mã khiếu nại",
+      "orderId": "Mã đơn hàng",
+      "buyerId": "Người mua (ID)",
+      "sellerId": "Người bán (ID)",
+      "reason": "Lý do khiếu nại",
+      "description": "Mô tả từ người mua",
+      "evidenceTitle": "Ảnh bằng chứng",
+      "evidenceCount": "{{count}} tệp",
+      "noEvidence": "Người mua không đính kèm ảnh bằng chứng.",
+      "openEvidence": "Phóng to ảnh bằng chứng {{index}}",
+      "evidenceAlt": "Ảnh bằng chứng số {{index}}",
+      "evidencePreview": "Xem lớn ảnh bằng chứng",
+      "decisionFormTitle": "Ra quyết định xử lý",
+      "decisionResultTitle": "Kết quả đã xử lý",
+      "chooseDecision": "Chọn hướng giải quyết",
+      "noteLabel": "Ghi chú quyết định",
+      "notePlaceholder": "Nêu rõ căn cứ duyệt hoàn tiền hoặc lý do từ chối khiếu nại...",
+      "submitDecision": "Xác nhận quyết định",
+      "confirmApproveTitle": "Hoàn tiền cho đơn {{orderId}}…?",
+      "confirmRejectTitle": "Từ chối khiếu nại đơn {{orderId}}…?",
+      "confirmApproveText": "Thao tác này sẽ hoàn tiền ký quỹ vào ví người mua và đóng khiếu nại. Không thể hoàn tác.",
+      "confirmRejectText": "Thao tác này sẽ bác bỏ khiếu nại và hoàn tất đơn hàng cho người bán. Không thể hoàn tác.",
+      "approvedSuccess": "Đã chấp thuận khiếu nại và hoàn tiền vào ví người mua.",
+      "rejectedSuccess": "Đã từ chối khiếu nại và hoàn tất đơn hàng.",
+      "reviewedBy": "Quản trị viên xử lý",
+      "reviewedAt": "Thời điểm xử lý",
+      "decisionNote": "Ghi chú quyết định"
+    }
+  },
+  "withdrawals": {
+    "title": "Duyệt rút tiền",
+    "subtitle": "Phê duyệt, xác nhận chuyển khoản hoàn tất hoặc từ chối yêu cầu rút số dư từ ví người dùng.",
+    "tabsLabel": "Lọc yêu cầu rút tiền theo trạng thái",
+    "searchPlaceholder": "Tìm theo ID, ngân hàng, chủ tài khoản...",
+    "loadError": "Không thể tải danh sách rút tiền",
+    "emptyTitle": "Chưa có yêu cầu rút tiền nào",
+    "emptyDescription": "Không có yêu cầu rút tiền nào khớp với bộ lọc hiện tại.",
+    "walletLabel": "Ví #{{walletId}}",
+    "processedPrefix": "Xử lý:",
+    "tabs": {
+      "ALL": "Tất cả",
+      "REQUESTED": "Chờ duyệt",
+      "PROCESSING": "Đang chuyển",
+      "COMPLETED": "Hoàn tất",
+      "CLOSED": "Từ chối / Thất bại"
+    },
+    "columns": {
+      "id": "Yêu cầu / Ví",
+      "bank": "Tài khoản nhận",
+      "amount": "Số tiền",
+      "status": "Trạng thái",
+      "requestedAt": "Thời gian",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "REQUESTED": "Chờ duyệt",
+      "PROCESSING": "Đang xử lý",
+      "COMPLETED": "Hoàn tất",
+      "REJECTED": "Đã từ chối",
+      "FAILED": "Thất bại",
+      "CANCELLED": "Đã hủy"
+    },
+    "actions": {
+      "approve": "Duyệt",
+      "complete": "Hoàn tất",
+      "reject": "Từ chối",
+      "fail": "Báo thất bại"
+    },
+    "validation": {
+      "reasonRequired": "Vui lòng nhập lý do."
+    },
+    "dialog": {
+      "reasonLabel": "Lý do",
+      "reasonPlaceholder": "Nhập lý do từ chối hoặc nguyên nhân chuyển khoản thất bại...",
+      "approve": {
+        "title": "Duyệt yêu cầu rút tiền #{{id}}?",
+        "description": "Chuyển yêu cầu rút {{amount}} tới {{holder}} ({{bank}}) sang trạng thái Đang xử lý."
+      },
+      "complete": {
+        "title": "Xác nhận đã chuyển khoản #{{id}}?",
+        "description": "Đánh dấu đã chi trả thành công {{amount}} cho {{holder}} ({{bank}}). Số dư tạm giữ sẽ được khấu trừ."
+      },
+      "reject": {
+        "title": "Từ chối yêu cầu rút tiền #{{id}}?",
+        "description": "Hủy yêu cầu rút {{amount}} của {{holder}} ({{bank}}) và hoàn lại số dư khả dụng về ví."
+      },
+      "fail": {
+        "title": "Đánh dấu thất bại yêu cầu #{{id}}?",
+        "description": "Ghi nhận giao dịch chuyển {{amount}} tới {{holder}} ({{bank}}) thất bại và hoàn lại tiền về ví người dùng."
+      }
+    },
+    "success": {
+      "approve": "Đã duyệt yêu cầu rút tiền #{{id}} sang trạng thái đang xử lý.",
+      "complete": "Đã xác nhận hoàn tất yêu cầu rút tiền #{{id}}.",
+      "reject": "Đã từ chối yêu cầu rút tiền #{{id}} và hoàn tiền về ví.",
+      "fail": "Đã đánh dấu thất bại yêu cầu rút tiền #{{id}} và hoàn tiền về ví."
+    }
+  },
+  "vouchers": {
+    "title": "Quản lý voucher toàn sàn",
+    "subtitle": "Theo dõi toàn bộ mã giảm giá trên hệ thống và phát hành voucher khuyến mãi của sàn.",
+    "tabsLabel": "Lọc voucher theo đơn vị phát hành",
+    "searchPlaceholder": "Tìm theo mã voucher...",
+    "loadError": "Không thể tải danh sách voucher",
+    "emptyTitle": "Chưa có voucher nào",
+    "emptyDescription": "Hiện chưa có mã giảm giá nào khớp với bộ lọc đang chọn.",
+    "createSuccess": "Đã phát hành voucher toàn sàn {{code}}.",
+    "maxDiscountCap": "Tối đa {{amount}}",
+    "tabs": {
+      "ALL": "Tất cả",
+      "PLATFORM": "Toàn sàn",
+      "STORE": "Gian hàng"
+    },
+    "actions": {
+      "create": "Tạo voucher toàn sàn"
+    },
+    "columns": {
+      "code": "Mã voucher",
+      "issuer": "Phạm vi",
+      "discount": "Mức giảm",
+      "minOrder": "Đơn tối thiểu",
+      "remaining": "Lượt còn lại",
+      "expiredAt": "Hết hạn",
+      "status": "Trạng thái"
+    },
+    "issuer": {
+      "PLATFORM": "Toàn sàn",
+      "STORE": "Gian hàng"
+    },
+    "discountType": {
+      "PERCENT": "Giảm theo phần trăm (%)",
+      "FIXED": "Giảm số tiền cố định (VND)"
+    },
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "EXPIRED": "Hết hạn",
+      "OUT_OF_STOCK": "Hết lượt",
+      "INACTIVE": "Ngừng kích hoạt"
+    },
+    "form": {
+      "title": "Phát hành voucher toàn sàn",
+      "subtitle": "Hệ thống sẽ tự động gắn phạm vi phát hành là Toàn sàn (PLATFORM).",
+      "codeLabel": "Mã voucher",
+      "codeHint": "Tối đa 50 ký tự, tự động chuyển in hoa.",
+      "codePlaceholder": "VD: MOLDY50K",
+      "discountTypeLabel": "Loại giảm giá",
+      "discountValuePercentLabel": "Phần trăm giảm (%)",
+      "discountValueFixedLabel": "Số tiền giảm (VND)",
+      "quantityLabel": "Số lượt sử dụng",
+      "expiredAtLabel": "Thời điểm hết hạn",
+      "minOrderLabel": "Giá trị đơn tối thiểu (VND)",
+      "optionalHint": "Không bắt buộc.",
+      "maxDiscountLabel": "Giảm tối đa (VND)",
+      "maxDiscountHint": "Chỉ áp dụng cho voucher giảm theo %.",
+      "submit": "Tạo voucher"
+    },
+    "validation": {
+      "codeRequired": "Vui lòng nhập mã voucher.",
+      "codeMax": "Mã voucher không được vượt quá 50 ký tự.",
+      "discountValueRequired": "Vui lòng nhập mức giảm.",
+      "discountValuePositive": "Mức giảm phải lớn hơn 0.",
+      "percentMax": "Mức giảm theo phần trăm không được vượt quá 100%.",
+      "quantityRequired": "Vui lòng nhập số lượt sử dụng.",
+      "quantityPositive": "Số lượt sử dụng phải là số nguyên lớn hơn 0.",
+      "expiredAtRequired": "Vui lòng chọn thời điểm hết hạn.",
+      "expiredAtFuture": "Thời điểm hết hạn phải ở trong tương lai.",
+      "minOrderNonNegative": "Đơn tối thiểu không được âm.",
+      "maxDiscountPositive": "Mức giảm tối đa phải lớn hơn 0."
+    }
   }
 }
