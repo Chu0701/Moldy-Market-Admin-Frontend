@@ -1,9 +1,22 @@
 # 04 - Routing và danh sách trang (Admin Frontend)
 
-> **Trạng thái:** BẢN NHÁP v0.1
-> **Cập nhật:** 2026-11-08
+> **Trạng thái:** v0.2 (cập nhật 2026-11-27: đã triển khai `AdminLayout` shell + Group 2 gồm `/`, `/disputes`, `/disputes/:disputeId`, `/withdrawals`, `/vouchers` tại commit `b285031`; phần `/login` + `RequireAdmin` và Group 1 MVP đang chờ triển khai tiếp)
+> **Cập nhật:** 2026-11-27
 > **Áp dụng cho:** `Moldy-Market-Admin-Frontend`
 > **Mục đích:** Là nguồn duy nhất (single source of truth) về mọi route của Admin Frontend: đường dẫn, trang, layout, quyền truy cập, phụ thuộc Backend và trạng thái triển khai. Các tài liệu khác chỉ trỏ về đây, không lặp lại bảng route.
+
+### Trạng thái route đang chạy thực tế (`src/app/router/routes.jsx`, 2026-11-27)
+
+| Path | Page | Layout | Trạng thái FE | Ghi chú |
+|---|---|---|---|---|
+| `/` | `DashboardPage` | `AdminLayout` | `IMPLEMENTED` | Trang tổng quan có lối tắt sang các module đang hoạt động (không hiển thị số liệu giả) |
+| `/disputes` | `AdminDisputesPage` | `AdminLayout` | `IMPLEMENTED` | Danh sách tranh chấp + lọc trạng thái |
+| `/disputes/:disputeId` | `AdminDisputeDetailPage` | `AdminLayout` | `IMPLEMENTED` | Chi tiết tranh chấp, ảnh bằng chứng, form duyệt/từ chối |
+| `/withdrawals` | `AdminWithdrawalsPage` | `AdminLayout` | `IMPLEMENTED` | Danh sách yêu cầu rút tiền + hộp thoại xử lý/hoàn tất/từ chối |
+| `/vouchers` | `AdminVouchersPage` | `AdminLayout` | `IMPLEMENTED` | Tạo & xem danh sách Platform Vouchers |
+| `*` | Redirect → `/` | `AdminLayout` | `IMPLEMENTED` | — |
+
+*(Login `/login` + `RequireAdmin` guard và Group 1 MVP `/users`, `/stores`, `/products`, `/categories` chưa nối vào `routes.jsx` — giữ đúng đặc tả chi tiết ở bảng bên dưới cho giai đoạn tiếp theo.)*
 
 ## 0. Cách đọc tài liệu này
 

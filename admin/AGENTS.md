@@ -52,12 +52,21 @@ Alias `@` = `src`. Dev proxy: `/api` -> `API_PROXY_TARGET` (default http://local
 - Env/build: `12`; order of work: `13-DEVELOPMENT-ROADMAP.md`; PR rules: `15-CONTRIBUTING.md`
 - Backend truth (endpoints, DTO limits, error codes, Bn issues, Qn questions): `14-BACKEND-INTEGRATION-MATRIX.md`
 
-## Project state (2026-11-22)
+## Project state (2026-11-27)
 
-DONE (scaffold & config): Vite, React 19, Tailwind 4 tokens, fonts, shadcn (`button`), ESLint 10, Prettier, Vitest + RTL (`passWithNoTests: true`, 0 test files so far), `index.html` metadata + favicon, GitHub Actions CI, PR template, alias, `/api` proxy, i18n `vi`/`en` base (8 keys, 100% parity), Node 22, editorconfig, base folder structure (`.gitkeep`), 15 docs + `HANDOFF-ADMIN-FRONTEND.md`.
-NOT DONE (app code): everything. `src/main.jsx` still renders trial `App.jsx`. No router, providers, layouts (`AuthLayout`, `AdminLayout`), Axios client, `tokenStorage`, auth hooks, services, pages, or unit tests yet.
-Approved Admin MVP order (see `HANDOFF-ADMIN-FRONTEND.md` & doc 13): 1) App shell + Admin session (`RequireAdmin`, selectively port core HTTP/auth infra from User FE baseline with `moldy-market:admin:access-token`); 2) Users (`/users`, `/users/:userId` — **Admin must NOT bypass Email OTP** to activate `PENDING_VERIFICATION`); 3) Stores (`/stores`, `/stores/:storeId`); 4) Product moderation (`/products`, `/products/:productId`); 5) Categories (`/categories` tree CRUD).
-Post-MVP (audit contract first): Admin orders (`start-shipping`/`mark-delivered`/`cod-collected` exist with `@IsAdmin`, but no global admin order-list API yet), Appraiser admin (`/api/v1/admin/appraisers/**`, `hasRole('ADMIN')`), Vouchers (`/api/admin/vouchers`, `@IsAdmin`), Reference Prices (`/api/admin/reference-prices`, `@IsAdmin`), Wallet/Escrow/Withdrawal (**B2 still open**: no `@PreAuthorize`). Dashboard analytics, disputes/refunds, reports, settings are `NOT_FOUND` (skeleton only).
+DONE (`main` `b285031`):
+- Tooling & config: Vite 8, React 19, Tailwind 4 `@layer components` semantic CSS & design tokens (`src/index.css`), shadcn (`button`), ESLint 10, Prettier, Vitest + RTL (**6 test files / 13 passing tests**), GitHub Actions CI, `/api` proxy, i18n `vi`/`en` parity.
+- Core infrastructure: `AppProviders`, `queryClient`, `src/lib/tokenStorage.js` (Admin namespace `moldy-market:admin:access-token`), `src/lib/formatters.js`, `src/services/api/{ApiError,unwrap,client,apiErrorMessage}.js`, `src/state/sidebarStore.js`, `src/constants/navigation.js`, shared `components/common/{PageHeader,StatusBadge,ConfirmDialog,FormField,CopyableId,ImageWithFallback,LanguageSwitcher}` and `components/feedback/{EmptyState,ErrorState,ForbiddenState,TableSkeleton,RouteLoading}`.
+- App shell & routes (`src/app/router/routes.jsx`): `AdminLayout` + `AdminSidebar` + `AdminHeader` + `DashboardPage` (`/`) using React Router v7 native `lazy` routes. *(Note: Login page & `RequireAdmin` guard are intentionally omitted for now per Chu's explicit instruction during local dev.)*
+- Implemented Group 2 modules (`src/features/` + `src/services/`):
+  - **Disputes** (`/disputes`, `/disputes/:disputeId`): `adminDisputeService.js`, `useAdminDisputes.js`, `reviewDisputeSchema.js`, `DisputeTable`, `DisputeEvidenceGallery`, `DisputeReviewForm`, `DisputeDecisionCard`, `AdminDisputesPage`, `AdminDisputeDetailPage` + unit tests.
+  - **Withdrawals** (`/withdrawals`): `adminWithdrawalService.js`, `useAdminWithdrawals.js`, `withdrawalReasonSchema.js`, `WithdrawalTable`, `WithdrawalActionDialog`, `AdminWithdrawalsPage` + unit tests.
+  - **Platform Vouchers** (`/vouchers`): `adminVoucherService.js`, `useAdminVouchers.js`, `createVoucherSchema.js`, `PlatformVoucherForm`, `VoucherTable`, `AdminVouchersPage` + unit tests.
+
+NOT DONE / NEXT:
+- Admin Auth session: `/login`, `AuthLayout`, `authRefreshInterceptor`, `RequireAdmin` guard (porting auth session mechanics from User FE with `moldy-market:admin:access-token` & `X-Moldy-Auth: 1`).
+- Group 1 MVP modules (directories exist as placeholders): Users (`/users`, `/users/:userId` — **Admin must NOT bypass Email OTP** to activate `PENDING_VERIFICATION`), Stores (`/stores`, `/stores/:storeId`), Product Moderation (`/products`, `/products/:productId`), Categories (`/categories` tree CRUD).
+- Post-MVP (pending Backend endpoints/audits): Global admin order list (shipping/delivered/cod-collected endpoints exist, no global list API), Reference Prices (`/api/admin/reference-prices`), Appraiser admin management, Dashboard analytics (`ANALYTICS_SYSTEM_VIEW` has no controller yet).
 
 ## Skills
 
