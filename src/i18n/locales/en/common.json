@@ -1,16 +1,283 @@
 {
   "app": {
-    "name": "Moldy Market",
-    "tagline": "Find great second-hand deals and trade with confidence."
+    "name": "Moldy Market Admin",
+    "tagline": "Administration portal for the escrow secondhand marketplace."
   },
   "actions": {
     "buyNow": "Buy now",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "submitting": "Submitting...",
+    "close": "Close",
+    "copied": "Copied",
+    "copyValue": "Copy {{value}}"
   },
   "language": {
     "label": "Language",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "nav": {
+    "ariaLabel": "Admin navigation",
+    "openMenu": "Open navigation menu",
+    "dashboard": "Overview",
+    "disputes": "Disputes & refunds",
+    "withdrawals": "Withdrawals",
+    "vouchers": "Platform vouchers"
+  },
+  "dashboard": {
+    "title": "Admin workspace",
+    "subtitle": "Pick a module below or use the sidebar navigation to get started.",
+    "openModule": "Open module"
+  },
+  "feedback": {
+    "loading": "Loading page...",
+    "forbiddenTitle": "Access denied",
+    "forbiddenMessage": "Your account does not have permission to view or perform this action."
+  },
+  "errors": {
+    "default": "Could not complete the request. Please try again later.",
+    "FE_NETWORK_ERROR": "Unable to reach the server. Check your connection and try again.",
+    "FE_UNKNOWN_ERROR": "An unexpected error occurred. Please try again.",
+    "COMMON_003": "Your session has expired. Please sign in again.",
+    "COMMON_004": "You do not have permission to perform this action.",
+    "DISPUTE_001": "Dispute record was not found.",
+    "DISPUTE_005": "This dispute is no longer open for review.",
+    "WALLET_005": "Withdrawal request was not found.",
+    "WALLET_006": "Withdrawal state does not allow this action.",
+    "VOUCHER_001": "Voucher code was not found.",
+    "VOUCHER_002": "This voucher code already exists.",
+    "INVALID_REQUEST": "Invalid request payload. Please review your inputs."
+  },
+  "disputes": {
+    "title": "Disputes & refunds",
+    "subtitle": "Review buyer evidence and adjudicate escrow refunds or order completion.",
+    "tabsLabel": "Filter disputes by status",
+    "searchPlaceholder": "Search by order code, product title...",
+    "loadError": "Could not load disputes",
+    "emptyTitle": "No matching disputes",
+    "emptyDescription": "There are no dispute requests matching the active filter.",
+    "untitledItem": "Untitled item",
+    "tabs": {
+      "ALL": "All",
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Cancelled"
+    },
+    "columns": {
+      "order": "Order / Product",
+      "reason": "Reason",
+      "amount": "Order amount",
+      "status": "Status",
+      "createdAt": "Created",
+      "action": "Action"
+    },
+    "status": {
+      "OPEN": "Open",
+      "PENDING_APPROVAL": "Pending review",
+      "APPROVED": "Refunded",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Withdrawn"
+    },
+    "reason": {
+      "ITEM_NOT_RECEIVED": "Item not received",
+      "NOT_AS_DESCRIBED": "Not as described",
+      "DAMAGED": "Item damaged",
+      "WRONG_ITEM": "Wrong item received",
+      "OTHER": "Other reason"
+    },
+    "actions": {
+      "review": "Review",
+      "view": "View details"
+    },
+    "decision": {
+      "APPROVE": "Approve & refund",
+      "APPROVE_DESC": "Refund the full escrow amount back to the buyer wallet.",
+      "REJECT": "Reject dispute",
+      "REJECT_DESC": "Dismiss the dispute and complete the order for the seller."
+    },
+    "validation": {
+      "decisionRequired": "Please select a decision.",
+      "noteRequired": "Please enter a decision note.",
+      "noteMax": "Decision note cannot exceed 1000 characters."
+    },
+    "detail": {
+      "backToList": "Back to disputes",
+      "title": "Dispute details",
+      "createdAt": "Created at",
+      "loadError": "Could not load dispute details",
+      "infoTitle": "Order & dispute information",
+      "disputeId": "Dispute ID",
+      "orderId": "Order ID",
+      "buyerId": "Buyer ID",
+      "sellerId": "Seller ID",
+      "reason": "Dispute reason",
+      "description": "Buyer description",
+      "evidenceTitle": "Evidence photos",
+      "evidenceCount": "{{count}} files",
+      "noEvidence": "No evidence images were attached.",
+      "openEvidence": "Zoom evidence image {{index}}",
+      "evidenceAlt": "Evidence photo {{index}}",
+      "evidencePreview": "Evidence image preview",
+      "decisionFormTitle": "Adjudicate dispute",
+      "decisionResultTitle": "Recorded decision",
+      "chooseDecision": "Select resolution",
+      "noteLabel": "Decision note",
+      "notePlaceholder": "Explain the evidence basis for approving or rejecting this dispute...",
+      "submitDecision": "Confirm decision",
+      "confirmApproveTitle": "Refund order {{orderId}}…?",
+      "confirmRejectTitle": "Reject dispute for order {{orderId}}…?",
+      "confirmApproveText": "This credits the escrow refund to the buyer wallet and closes the dispute. This cannot be undone.",
+      "confirmRejectText": "This dismisses the dispute and completes the order for the seller. This cannot be undone.",
+      "approvedSuccess": "Dispute approved and refund credited to the buyer wallet.",
+      "rejectedSuccess": "Dispute rejected and order marked completed.",
+      "reviewedBy": "Reviewed by",
+      "reviewedAt": "Reviewed at",
+      "decisionNote": "Decision note"
+    }
+  },
+  "withdrawals": {
+    "title": "Withdrawal approvals",
+    "subtitle": "Approve, confirm completed bank payouts, or reject user wallet withdrawal requests.",
+    "tabsLabel": "Filter withdrawals by status",
+    "searchPlaceholder": "Search by ID, bank, account holder...",
+    "loadError": "Could not load withdrawal requests",
+    "emptyTitle": "No withdrawal requests",
+    "emptyDescription": "No withdrawal requests match the current filter.",
+    "walletLabel": "Wallet #{{walletId}}",
+    "processedPrefix": "Processed:",
+    "tabs": {
+      "ALL": "All",
+      "REQUESTED": "Requested",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "CLOSED": "Rejected / Failed"
+    },
+    "columns": {
+      "id": "Request / Wallet",
+      "bank": "Bank account",
+      "amount": "Amount",
+      "status": "Status",
+      "requestedAt": "Timestamp",
+      "actions": "Actions"
+    },
+    "status": {
+      "REQUESTED": "Requested",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "REJECTED": "Rejected",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "actions": {
+      "approve": "Approve",
+      "complete": "Complete",
+      "reject": "Reject",
+      "fail": "Mark failed"
+    },
+    "validation": {
+      "reasonRequired": "Please provide a reason."
+    },
+    "dialog": {
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Explain why this withdrawal is rejected or failed...",
+      "approve": {
+        "title": "Approve withdrawal #{{id}}?",
+        "description": "Move withdrawal of {{amount}} to {{holder}} ({{bank}}) into Processing."
+      },
+      "complete": {
+        "title": "Mark withdrawal #{{id}} completed?",
+        "description": "Confirm {{amount}} was transferred to {{holder}} ({{bank}}). Pending hold will be settled."
+      },
+      "reject": {
+        "title": "Reject withdrawal #{{id}}?",
+        "description": "Reject withdrawal of {{amount}} for {{holder}} ({{bank}}) and return funds to available balance."
+      },
+      "fail": {
+        "title": "Mark withdrawal #{{id}} as failed?",
+        "description": "Record payout failure of {{amount}} for {{holder}} ({{bank}}) and return funds to available balance."
+      }
+    },
+    "success": {
+      "approve": "Withdrawal #{{id}} moved to processing.",
+      "complete": "Withdrawal #{{id}} marked as completed.",
+      "reject": "Withdrawal #{{id}} rejected and funds returned to wallet.",
+      "fail": "Withdrawal #{{id}} marked failed and funds returned to wallet."
+    }
+  },
+  "vouchers": {
+    "title": "Platform vouchers",
+    "subtitle": "Inspect all marketplace vouchers and issue new platform-wide discount codes.",
+    "tabsLabel": "Filter vouchers by issuer",
+    "searchPlaceholder": "Search by voucher code...",
+    "loadError": "Could not load vouchers",
+    "emptyTitle": "No vouchers found",
+    "emptyDescription": "No vouchers match the active filter.",
+    "createSuccess": "Platform voucher {{code}} created.",
+    "maxDiscountCap": "Cap {{amount}}",
+    "tabs": {
+      "ALL": "All",
+      "PLATFORM": "Platform",
+      "STORE": "Store"
+    },
+    "actions": {
+      "create": "Create platform voucher"
+    },
+    "columns": {
+      "code": "Voucher code",
+      "issuer": "Scope",
+      "discount": "Discount",
+      "minOrder": "Min. order",
+      "remaining": "Remaining",
+      "expiredAt": "Expires",
+      "status": "Status"
+    },
+    "issuer": {
+      "PLATFORM": "Platform",
+      "STORE": "Store"
+    },
+    "discountType": {
+      "PERCENT": "Percentage (%)",
+      "FIXED": "Fixed amount (VND)"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "EXPIRED": "Expired",
+      "OUT_OF_STOCK": "Out of stock",
+      "INACTIVE": "Inactive"
+    },
+    "form": {
+      "title": "Issue platform voucher",
+      "subtitle": "The server automatically assigns the PLATFORM issuer scope.",
+      "codeLabel": "Voucher code",
+      "codeHint": "Up to 50 characters, automatically uppercased.",
+      "codePlaceholder": "e.g. MOLDY50K",
+      "discountTypeLabel": "Discount type",
+      "discountValuePercentLabel": "Discount percent (%)",
+      "discountValueFixedLabel": "Discount amount (VND)",
+      "quantityLabel": "Usage quantity",
+      "expiredAtLabel": "Expiry date & time",
+      "minOrderLabel": "Minimum order value (VND)",
+      "optionalHint": "Optional.",
+      "maxDiscountLabel": "Maximum discount cap (VND)",
+      "maxDiscountHint": "Only applies to percentage vouchers.",
+      "submit": "Create voucher"
+    },
+    "validation": {
+      "codeRequired": "Voucher code is required.",
+      "codeMax": "Voucher code cannot exceed 50 characters.",
+      "discountValueRequired": "Discount value is required.",
+      "discountValuePositive": "Discount value must be greater than 0.",
+      "percentMax": "Percentage discount cannot exceed 100%.",
+      "quantityRequired": "Usage quantity is required.",
+      "quantityPositive": "Usage quantity must be a positive integer.",
+      "expiredAtRequired": "Expiry date is required.",
+      "expiredAtFuture": "Expiry date must be in the future.",
+      "minOrderNonNegative": "Minimum order value cannot be negative.",
+      "maxDiscountPositive": "Maximum discount must be greater than 0."
+    }
   }
 }

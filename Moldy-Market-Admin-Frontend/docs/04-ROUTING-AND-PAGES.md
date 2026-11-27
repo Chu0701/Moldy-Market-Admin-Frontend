@@ -61,16 +61,16 @@ flowchart TD
 Quy ước cột:
 - **Layout**: `AuthLayout` (trang đăng nhập, bố cục giữa màn hình) hoặc `AdminLayout` (sidebar trái, header trên, vùng nội dung).
 - **Quyền**: ở Frontend, "ADMIN" nghĩa là `GET /api/v1/users/me` trả `roles` có `ADMIN`. Đây **chỉ là cổng giao diện**; Backend mới là chốt chặn thật (phần 5).
-- **Permission Backend**: permission mà Backend yêu cầu cho endpoint (từ doc 14). Frontend **chưa đọc được** permission code của user (Q1), nên cột này để đối chiếu, không dùng để ẩn/hiện.
-- **BE** = trạng thái Backend (doc 14). **FE** = trạng thái Frontend.
+- **Permission Backend**: permission mà Backend yêu cầu cho endpoint (từ doc 14). `GET /api/v1/users/me` đã trả `roles`, `permissions`, `storeId` (dùng cho UX); Backend luôn là chốt chặn cuối (`403`).
+- **BE** = trạng thái Backend (doc 14). **FE** = trạng thái Frontend (`NOT_STARTED` — repo đang ở giai đoạn scaffold).
 
-### 3.1 Route đã có Backend dùng được (`IMPLEMENTED`)
+### 3.1 Route đã có Backend dùng được (`IMPLEMENTED` — Admin MVP)
 
 | Path | Page component | Layout | Quyền truy cập | Permission Backend | Phụ thuộc Backend (doc 14) | BE | FE |
 |---|---|---|---|---|---|---|---|
-| `/login` | `LoginPage` | `AuthLayout` | Công khai. Nếu đã đăng nhập đúng role ADMIN thì chuyển về `/`. | không áp dụng | `POST /api/v1/auth/login`, `GET /api/v1/users/me`, `POST /api/v1/auth/logout` (khi tài khoản không phải admin). Xem 3.1 và 3.5 doc 14, B10. | `IMPLEMENTED` | `NOT_STARTED` |
-| `/users` | `UserListPage` | `AdminLayout` | ADMIN | `USER_STORE_MANAGE` | `GET /api/v1/users` (`PagedResponse`, `page` bắt đầu từ 1) | `IMPLEMENTED` | `NOT_STARTED` |
-| `/users/:userId` | `UserDetailPage` | `AdminLayout` | ADMIN | `USER_STORE_MANAGE` | `GET /api/v1/users/{id}`, `PUT /api/v1/users/{id}/status`. `UserStatus`: `ACTIVE`, `LOCKED`, `PENDING_VERIFICATION`. B10: admin là người duy nhất kích hoạt `PENDING_VERIFICATION` sang `ACTIVE` ở trạng thái hiện tại. | `IMPLEMENTED` | `NOT_STARTED` |
+| `/login` | `LoginPage` | `AuthLayout` | Công khai. Nếu đã đăng nhập đúng role `ADMIN` thì chuyển về `/`. | không áp dụng | `POST /api/v1/auth/login` (`X-Moldy-Auth: 1` + cookie), `GET /api/v1/users/me`, `POST /api/v1/auth/logout` (khi không phải admin). | `IMPLEMENTED` | `NOT_STARTED` |
+| `/users` | `UserListPage` | `AdminLayout` | ADMIN | `USER_STORE_MANAGE` | `GET /api/v1/users` (`PagedResponse`, `page` bắt đầu từ 1; DTO `UserSummaryResponse` không có `roles`) | `IMPLEMENTED` | `NOT_STARTED` |
+| `/users/:userId` | `UserDetailPage` | `AdminLayout` | ADMIN | `USER_STORE_MANAGE` | `GET /api/v1/users/{id}`, `PUT /api/v1/users/{id}/status`. `UserStatus`: `ACTIVE`, `LOCKED`, `PENDING_VERIFICATION`. **Quyết định 2026-11-21:** Admin **không được bypass Email OTP** để kích hoạt `PENDING_VERIFICATION`; chỉ khóa/mở khóa theo transition hợp lệ. | `IMPLEMENTED` | `NOT_STARTED` |
 | `/stores` | `StoreListPage` | `AdminLayout` | ADMIN | `USER_STORE_MANAGE` | `GET /api/v1/stores` (`PagedResponse`) | `IMPLEMENTED` | `NOT_STARTED` |
 | `/stores/:storeId` | `StoreDetailPage` | `AdminLayout` | ADMIN | `USER_STORE_MANAGE` (đổi status) | `PUT /api/v1/stores/{id}/status` (`StoreStatus`: `ACTIVE`, `BLOCKED`). Dữ liệu chi tiết lấy từ `GET /api/v1/stores/{id}` (endpoint công khai). Chưa audit xem endpoint này có trả đủ trường cho nhu cầu admin hay không. | `IMPLEMENTED` | `NOT_STARTED` |
 | `/products` | `ProductModerationListPage` | `AdminLayout` | ADMIN | không yêu cầu cho phần đọc (công khai) | `GET /api/v1/products/search` hoặc `GET /api/v1/products` (tham số của `GET /products` chưa audit). Xem câu hỏi mở AQ1 ở mục 8. | `IMPLEMENTED` | `NOT_STARTED` |
@@ -87,8 +87,8 @@ Theo quy tắc 1.2 của doc 14: dòng `IN_PROGRESS`, `PLANNED`, `NOT_FOUND`, `R
 | `/transactions` | `TransactionListPage` | `AdminLayout` | ADMIN | Không có controller quản lý giao dịch cho admin. | `NOT_FOUND` | `NOT_STARTED` |
 | `/escrow` | `EscrowPage` | `AdminLayout` | ADMIN | Có endpoint escrow trên branch chưa merge (`POST /api/v1/escrows/hold`, `/orders/{orderId}/capture`, `/orders/{orderId}/release`) nhưng chỉ cần đăng nhập (B2), trông như thao tác nội bộ của service (Q4), `orderId` không nhất quán (B7), chưa nối với order thật (Q18). Chưa nên viết service. | `IN_PROGRESS` | `NOT_STARTED` |
 | `/complaints` | `ComplaintListPage` | `AdminLayout` | ADMIN | Quy trình dispute và return chưa định nghĩa (Q10); chỉ có entity, chưa có controller. | `REQUIRES_BUSINESS_CLARIFICATION` | `NOT_STARTED` |
-| `/appraisers` | `AppraiserManagementPage` | `AdminLayout` | ADMIN | Có `GET /api/admin/appraisers`, `PUT /api/admin/appraisers/{id}/approve`, `PUT .../suspend` trên branch `feature/cart`; DTO chưa audit; không có kiểm tra quyền (B2). | `IN_PROGRESS` | `NOT_STARTED` |
-| `/vouchers` | `VoucherManagementPage` | `AdminLayout` | ADMIN | Có `POST/GET /api/admin/vouchers`, `GET /api/admin/vouchers/{code}` trên branch chưa merge; chỉ cần đăng nhập (B2). Chỉ có API voucher cho hệ thống/admin, chưa có cho người bán. | `IN_PROGRESS` | `NOT_STARTED` |
+| `/appraisers` | `AppraiserManagementPage` | `AdminLayout` | ADMIN | Backend đã thay bằng `AdminAppraiserController` (`/api/v1/admin/appraisers`, `/pending`, `/{id}/status`, `approve`, `reject`, `suspend`, `resume` với `hasRole('ADMIN')`). Cần audit DTO & phối hợp dev Appraiser trước khi nối (sau MVP). | `AUDIT_PENDING` | `NOT_STARTED` |
+| `/vouchers` | `VoucherManagementPage` | `AdminLayout` | ADMIN | Có `POST/GET /api/admin/vouchers`, `GET /api/admin/vouchers/{code}` (đã có `@IsAdmin`). Cần audit DTO trước khi nối (sau MVP). | `AUDIT_PENDING` | `NOT_STARTED` |
 | `/reports` | `ReportPage` | `AdminLayout` | ADMIN | Báo cáo, vi phạm: không có controller. | `NOT_FOUND` | `NOT_STARTED` |
 | `/settings` | `SettingsPage` | `AdminLayout` | ADMIN | Cấu hình hệ thống: không có controller. Phần cài đặt giao diện cục bộ (ví dụ ngôn ngữ) không cần Backend. | `NOT_FOUND` | `NOT_STARTED` |
 
@@ -102,9 +102,9 @@ Theo quy tắc 1.2 của doc 14: dòng `IN_PROGRESS`, `PLANNED`, `NOT_FOUND`, `R
 
 | Nội dung | Tình trạng | Cách xử lý |
 |---|---|---|
-| Quản lý order của admin | Backend **không có endpoint liệt kê order** cho admin. Chỉ có `POST /api/v1/orders/admin/{orderId}/cod-collected` (`IN_PROGRESS`, chuyển `DELIVERED` sang `COMPLETED`). Xem Q15, Q18, B11, B12. | Chưa tạo route `/orders`. Khi branch `feature/order` được merge và team chốt luồng, thao tác này dự kiến nằm trong `/transactions` hoặc `/escrow`. **Chưa quyết định**, cần team chốt sau Q18. |
-| Reference price (`/api/admin/reference-prices`) | `IN_PROGRESS`, không có kiểm tra quyền (B2), DTO chưa audit. | Chưa có route trong danh sách chuẩn. Khi cần, thêm vào doc 04 trước, rồi mới code. |
-| Rút tiền (`/api/v1/withdrawals/*`) | `IN_PROGRESS`, B2. | Chưa có route. Cùng cách xử lý với reference price. |
+| Quản lý order của admin | Backend đã có 3 endpoint `@IsAdmin`: `PATCH /api/v1/orders/admin/{orderId}/start-shipping`, `PATCH .../mark-delivered`, `POST .../cod-collected`, nhưng **chưa có endpoint liệt kê toàn bộ order cho admin**. | Chưa tạo route `/orders` trong MVP; không dùng `/orders/me` hay `/stores/{storeId}/orders` thay cho danh sách toàn hệ thống. |
+| Reference price (`/api/admin/reference-prices`) | Đã có trên `main` với `@IsAdmin` (Spring `Page`); DTO chưa audit. | Sau MVP; thêm vào bảng route sau khi audit. |
+| Rút tiền (`/api/v1/withdrawals/*`) | Đã có trên `main`, nhưng **B2 vẫn mở** (thiếu `@PreAuthorize`). | Sau MVP; chỉ mở khi Backend khóa quyền. |
 | Trang chi tiết giao dịch, hồ sơ cá nhân admin, đổi mật khẩu admin | Không nằm trong danh sách chuẩn. | Không tạo. Nếu cần, cập nhật bảng này trước. (`PUT /api/v1/users/me/password` có tồn tại nhưng chưa được đưa vào phạm vi Admin.) |
 
 ---

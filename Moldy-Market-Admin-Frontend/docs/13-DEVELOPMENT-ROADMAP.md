@@ -23,27 +23,18 @@
 
 ## 2. Các giai đoạn
 
-### Giai đoạn 0: Nền tảng cấu hình `FOUNDATION_ONLY`
+### Giai đoạn 0: Nền tảng cấu hình (`DONE`)
 
-Đã xong: Vite, Tailwind v4, shadcn (chỉ `button`), alias, proxy, Prettier, ESLint, i18n, design tokens, font, Node/EOL/editor, cấu trúc thư mục. Còn lại: Vitest + RTL, `index.html` (lang, title, `noindex`), GitHub Actions CI, mẫu PR, bảo vệ branch `main`, đối chiếu hai repo.
-Cột mốc: `lint`, `format:check`, `build` sạch.
+Đã xong: Vite, React 19, Tailwind v4, shadcn (`button`), alias, proxy (`/api`), Prettier, ESLint, i18n (`vi`/`en` 8 keys), design tokens, font, Node/EOL/editor, cấu trúc thư mục, Vitest + RTL (`passWithNoTests: true`), `index.html` metadata + favicon, GitHub Actions CI, mẫu Pull Request. `format:check`, `lint`, `build` đều pass.
 
-### Giai đoạn 1: Khung ứng dụng
+### Giai đoạn 1 & 2 (Đợt 1 Handoff): Khung ứng dụng + Phiên Admin (`NOT_STARTED`)
 
-Providers, Axios instance và interceptor, router skeleton, `AuthLayout`, `AdminLayout` (sidebar trái, header, vùng nội dung), `NotFoundPage`, lớp feedback, ErrorBoundary, thành phần bảng dữ liệu dùng chung (có phân trang, rỗng, lỗi). Chọn nơi lưu token trước khi viết interceptor (Q2).
-Cột mốc: khung admin điều hướng được giữa các route skeleton; `GET /api/v1/categories` đi qua lớp API chuẩn.
+Port có chọn lọc hạ tầng API/auth/session từ baseline User Frontend (`client`, `unwrap`, `ApiError`, `pagination`, `authRefreshInterceptor`, `tokenStorage` với namespace **`moldy-market:admin:access-token`**, HttpOnly cookie `moldy_refresh` + `X-Moldy-Auth: 1`), `QueryClientProvider`, `AuthLayout`, `AdminLayout`, `RequireAuth` + `RequireAdmin` (`roles.includes('ADMIN')` từ `['users', 'me']`), `/` dashboard skeleton trung thực, unit tests.
 
-### Giai đoạn 2: Xác thực và chặn truy cập admin
+### Giai đoạn 3 (Đợt 2 Handoff): Quản lý người dùng (`NOT_STARTED`)
 
-Đăng nhập, đăng xuất, refresh token, guard `RequireAdmin` (kiểm tra role `ADMIN` từ `GET /api/v1/users/me`). Xem doc 08.
-Phụ thuộc Backend: `IMPLEMENTED`. **Điểm chặn Q1:** permission `ADMIN_PORTAL_ACCESS` có tồn tại nhưng Frontend không đọc được, nên guard tạm dựa trên tên role và vẫn phải coi `403` là quyết định cuối. Cần tài khoản `ADMIN` seed.
-Cột mốc: user thường đăng nhập bị từ chối vào khu admin; admin vào được; tự refresh token; xử lý `AUTH_007`.
-
-### Giai đoạn 3: Quản lý người dùng
-
-Danh sách, chi tiết, đổi trạng thái (`PUT /api/v1/users/{id}/status`), quyền `USER_STORE_MANAGE`.
-Ghi chú B10: admin là người chuyển `PENDING_VERIFICATION` sang `ACTIVE` ở trạng thái hiện tại, nên đây là trang quan trọng sớm để tạo tài khoản test cho cả hai repo. Doc 14 chưa mô tả đầy đủ body của endpoint này: đọc lại DTO Backend trước khi dựng form.
-Cột mốc: tìm, lọc, đổi trạng thái user với xác nhận; bảng cập nhật sau mutation.
+Danh sách (`GET /api/v1/users`, `UserSummaryResponse` không có `roles`), chi tiết (`GET /api/v1/users/{id}`), đổi trạng thái (`PUT /api/v1/users/{id}/status`, quyền `USER_STORE_MANAGE`).
+**Quyết định 2026-11-21:** User tự kích hoạt qua Email OTP; **Admin không được bypass OTP** để chuyển `PENDING_VERIFICATION` sang `ACTIVE`. Chỉ hỗ trợ khóa/mở khóa theo transition hợp lệ đã xác minh.
 
 ### Giai đoạn 4: Quản lý danh mục
 
@@ -109,18 +100,17 @@ Giai đoạn 3 đến 6 độc lập nhau sau giai đoạn 2, có thể chia cho
 
 ---
 
-## 4. Điểm chặn đã biết
+## 4. Điểm chặn đã biết & trạng thái (2026-11-22)
 
-| Mã | Nội dung | Ảnh hưởng |
+| Mã | Nội dung | Trạng thái / Ảnh hưởng |
 |---|---|---|
-| Q2 | Chưa chốt nơi lưu token | Bảo mật phiên admin; cần chốt trước interceptor |
-| Q1 | Không đọc được permission code | Guard và menu chỉ dựa trên role |
-| B10, Q14 | Không có luồng kích hoạt tài khoản | Admin là người kích hoạt, cần tài khoản admin seed |
-| B1 | Không có CORS REST | Triển khai khác origin |
-| B2 | Thiếu `@PreAuthorize` (escrow, voucher admin, pricing, appraiser admin) | Không bật các trang này ở production khi chưa sửa |
-| B11 | Order đọc được bởi bất kỳ user | Rủi ro dữ liệu |
-| Q4, Q9, Q10, Q18 | Nghiệp vụ escrow, refund, dispute, COD chưa rõ | Các trang giữ skeleton |
-| Q12 | Thời điểm merge các branch | Giai đoạn 8 |
+| Q2 | Access token `localStorage` (`moldy-market:admin:access-token`), refresh token HttpOnly cookie `moldy_refresh` + `X-Moldy-Auth: 1` | **ĐÃ CHỐT** (xem `HANDOFF-ADMIN-FRONTEND.md`) |
+| Q1 | `/users/me` đã trả `roles`, `permissions`, `storeId` | **ĐÃ GIẢI QUYẾT** (`403` vẫn là quyết định cuối) |
+| B10, Q14 | Kích hoạt qua Email OTP; Admin **không được bypass OTP** | **ĐÃ GIẢI QUYẾT** |
+| B1 | `SecurityConfig` đã có CORS `/api/**`, nhưng thiếu `allowCredentials(true)` & `X-Moldy-Auth` | Chỉ ảnh hưởng khi deploy cross-origin |
+| B2 | Thiếu `@PreAuthorize` trên `WalletController`, `EscrowController`, `WithdrawalController` (đã sửa trên Voucher, Pricing, AdminAppraiser, Admin Order) | Không mở các trang Wallet/Escrow/Withdrawal khi chưa sửa |
+| Admin Orders | Đã có `@IsAdmin` cho `start-shipping`, `mark-delivered`, `cod-collected`, nhưng chưa có API danh sách order toàn hệ thống | Để giai đoạn sau MVP |
+| Q4, Q9, Q10 | Nghiệp vụ escrow, refund, dispute chưa có API hoàn chỉnh | Giữ skeleton |
 
 ## 5. Chưa có API (không làm tích hợp)
 

@@ -142,122 +142,81 @@ Danh sách đầy đủ nằm trong `ErrorCode.java`. Message của Backend là 
 
 ---
 
-## 3. Mô hình xác thực và phân quyền (đã xác minh trên `main`)
+## 3. Mô hình xác thực và phân quyền (Cập nhật 2026-11-22)
 
 ### 3.1 Endpoint
 
-| Tính năng | Endpoint | Method | Xác thực | Request | `data` trả về |
+| Tính năng | Endpoint | Method | Xác thực / Header | Request | `data` trả về |
 |---|---|---|---|---|---|
-| Đăng ký | `/api/v1/auth/register` | POST | không | `{ email, password(8-100), fullName(tối đa 100), phone }` | `{ userId, email, fullName, status }` |
-| Đăng nhập | `/api/v1/auth/login` | POST | không | `{ email(tối đa 254), password }` | `{ userId, email, fullName, accessToken, refreshToken, tokenType }` |
-| Refresh | `/api/v1/auth/refresh` | POST | không | `{ refreshToken }` | giống login |
-| Đăng xuất | `/api/v1/auth/logout` | POST | không | `{ refreshToken }` | không có data |
+| Đăng ký | `/api/v1/auth/register` | POST | công khai (rate-limited) | `{ email, password(8-100), fullName(<=100), phone? }` | `201 { userId, email, fullName, status }` |
+| Xác minh email OTP | `/api/v1/auth/verify-email` | POST | công khai (rate-limited) | `{ email, code(6 digits), password }` | `Void` |
+| Gửi lại OTP | `/api/v1/auth/resend-verification` | POST | công khai (rate-limited) | `{ email }` | `Void` |
+| Đăng nhập | `/api/v1/auth/login` | POST | công khai + bắt buộc `X-Moldy-Auth: 1` | `{ email(<=254), password }` | `AccessTokenResponse { userId, email, fullName, accessToken, tokenType }` + `Set-Cookie: moldy_refresh` |
+| Refresh | `/api/v1/auth/refresh` | POST | Cookie `moldy_refresh` + bắt buộc `X-Moldy-Auth: 1` | không body (`undefined`) | `AccessTokenResponse` + xoay vòng cookie `moldy_refresh` |
+| Đăng xuất | `/api/v1/auth/logout` | POST | Cookie `moldy_refresh` + bắt buộc `X-Moldy-Auth: 1` | không body (`undefined`) | `Void` + xóa cookie `moldy_refresh` |
 
 ### 3.2 Thông tin về token
 
 | Thông tin | Giá trị | Nguồn |
 |---|---|---|
-| Cả hai token được trả trong JSON body | có | `AuthResponse` |
-| Thời hạn access token | 900.000 ms = 15 phút | `application-local.yaml` (**chỉ profile local**) |
-| Thời hạn refresh token | 2.592.000.000 ms = 30 ngày | như trên |
-| Claim của access token | `sub` (user id), `email`, `tokenType = "ACCESS"` | `JwtService` |
-| Role / permission nằm trong JWT | **Không** | `JwtService` |
-| Lưu refresh token | có trạng thái (entity và repository trong database) | `security/refreshToken` |
-| Xoay vòng / phát hiện dùng lại | Mỗi lần refresh, token cũ bị thu hồi và cấp token mới. Nếu một token đã bị thu hồi mà vẫn được gửi lên, Backend **thu hồi toàn bộ phiên đăng nhập đang hoạt động của user** và trả `AUTH_007`. Logout chỉ thu hồi phiên của refresh token được gửi lên. Refresh token lưu dạng hash trong database. | `RefreshTokenService.rotate` / `revoke` (đã đọc code); chi tiết hash lấy từ commit message của `feature/security` |
+| Access token | Trả trong `AccessTokenResponse.accessToken` (JSON body). Admin FE lưu qua `src/lib/tokenStorage.js` (`moldy-market:admin:access-token`). | `AuthController`, Handoff 2026-11-21 |
+| Refresh token | **HttpOnly cookie `moldy_refresh`** (`HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/v1/auth`). **Không trả trong JSON body.** | `AuthController` |
+| Thời hạn access / refresh token | 15 phút / 30 ngày (profile local) | `application-local.yaml` |
+| Claim của access token | `sub`, `email`, `tokenType = "ACCESS"` (không chứa role/permission) | `JwtService` |
+| Cache-Control & CSRF | `Cache-Control: no-store`; bắt buộc `X-Moldy-Auth: 1` và `withCredentials: true` | `AuthController` |
+| Xoay vòng / phát hiện dùng lại | Dùng lại refresh token cũ trả `401 AUTH_007` và **thu hồi toàn bộ phiên của user**. | `RefreshTokenService` |
 
 ### 3.3 Phân quyền dựa trên permission, tính lại ở mỗi request
 
-`CustomUserDetailsService` dựng danh sách authority ở mỗi request đã xác thực, từ:
-
-1. `ROLE_<tên>` cho từng role user đang có. Tên role: `USER`, `APPRAISER`, `STAFF`, `ADMIN`, `OWNER`.
-2. Mọi permission code có grant type `FULL` của các role đó.
-3. Nếu user là staff của gian hàng: các permission code **được ủy quyền cho bản ghi staff đó**.
-
-Controller dùng `@PreAuthorize("hasAuthority('<PERMISSION>')")`. Các permission code được khai báo trong `PermissionConstants` (ví dụ `PRODUCT_CREATE`, `STORE_STAFF_MANAGE`, `ADMIN_PORTAL_ACCESS`, `CATEGORY_MANAGE`, `USER_STORE_MANAGE`, `PRODUCT_MODERATE`).
-
-Entity `UserRole` là `(user_id, role_id, store_id)`. Cột `store_id` làm cho việc gán role **gắn theo từng gian hàng**.
+`CustomUserDetailsService` dựng danh sách authority ở mỗi request từ: `ROLE_<tên>` (`USER`, `APPRAISER`, `STAFF`, `ADMIN`, `OWNER`), các permission `FULL` của role, và permission `DELEGATED` của staff. Controller dùng `@PreAuthorize` hoặc `@IsAdmin` / `@IsUser` / `@IsAppraiser`.
 
 ### 3.4 Frontend biết được gì về permission
 
 | Nhu cầu | Hiện có không? |
 |---|---|
-| Tên role của user hiện tại | Có: `GET /api/v1/users/me` trả `roles: string[]`. |
-| Permission code của user hiện tại | **Chưa thấy endpoint nào.** `/users/me` chỉ trả tên role; JWT không có. |
-| Permission của một staff | `StaffResponse.permissions` qua `GET /api/v1/stores/my-store/staff/me`, nhưng endpoint này yêu cầu `STORE_STAFF_MANAGE`. Xem Q1. |
-| Staff thuộc gian hàng nào | Chưa có endpoint đã xác minh nào cung cấp. |
+| Tên role, permission code và `storeId` của user hiện tại | Có: `GET /api/v1/users/me` trả `roles: string[]`, `permissions: string[]` và `storeId`. |
+| Quyền vào Admin app | Kiểm tra `roles.includes('ADMIN')` từ `/users/me` (UX gate). Backend vẫn là chốt chặn cuối (`403`). |
 
-Cho đến khi Q1 được giải quyết, Frontend chỉ có thể ẩn/hiện menu dựa trên **tên role**, và luôn phải coi phản hồi `403` là quyết định thật sự. Backend là nguồn quyết định cuối cùng.
+### 3.5 Kích hoạt tài khoản sau khi đăng ký (Email OTP — đã triển khai)
 
-### 3.5 Kích hoạt tài khoản sau khi đăng ký (team đã xác nhận)
-
-Theo đọc code, và team Backend đã xác nhận ngày 2026-11-08 rằng chưa có luồng nào đặt user thành `ACTIVE`:
-
-1. Đăng ký đặt trạng thái user là `PENDING_VERIFICATION` (`AuthenticationService`, entity `User`).
-2. Đăng nhập đi qua Spring `authenticate`, và `CustomUserDetails.isEnabled()` chỉ cho phép `ACTIVE`. User chưa `ACTIVE` gây `DisabledException`, Backend trả lỗi `ACCOUNT_DISABLED`.
-3. Không tìm thấy endpoint xác minh email hay OTP. Chỉ có hai nơi đặt `ACTIVE`: tài khoản admin được tạo lúc khởi động (`RoleInitializer`) và `PUT /api/v1/users/{id}/status` của admin.
-4. `StoreStaffService` cũng yêu cầu staff phải `ACTIVE`.
-
-Hệ quả: user tự đăng ký xong thì chưa đăng nhập được cho đến khi có luồng kích hoạt. Xem B10 và Q14. Trong lúc chờ, để phát triển và thử giao diện, tài khoản test phải được admin chuyển sang `ACTIVE` bằng `PUT /api/v1/users/{id}/status`, hoặc dùng tài khoản admin được tạo sẵn lúc khởi động.
+1. User mới đăng ký có trạng thái `PENDING_VERIFICATION` và tự xác minh qua Email OTP (`POST /api/v1/auth/verify-email`) để chuyển sang `ACTIVE`.
+2. **Quyết định nghiệp vụ đã chốt (2026-11-21):** **Admin không được bypass OTP** để kích hoạt `PENDING_VERIFICATION` sang `ACTIVE`.
 
 ---
 
-## 4. Ma trận tính năng
+## 4. Ma trận tính năng (Cập nhật 2026-11-22 — đồng bộ Backend `07ef520` + local)
 
-`Dùng bởi`: U = User Frontend, A = Admin Frontend.
+`Dùng bởi`: U = User Frontend, A = Admin Frontend. Toàn bộ dòng Admin FE hiện ở trạng thái `NOT_STARTED` (scaffold).
 
-### 4.1 Đã xác minh trên `main`
+### 4.1 Endpoints Admin MVP (`IMPLEMENTED` trên `main`)
 
-| Tính năng | Trạng thái | Controller | Endpoint | Xác thực / permission | Dùng bởi | FE |
-|---|---|---|---|---|---|---|
-| Đăng ký / đăng nhập / refresh / logout | `IMPLEMENTED` | `AuthController` | xem 3.1 | công khai | U, A | NOT_STARTED |
-| Hồ sơ của tôi | `IMPLEMENTED` | `UserController` | `GET /api/v1/users/me` | đã đăng nhập | U, A | NOT_STARTED |
-| Cập nhật hồ sơ | `IMPLEMENTED` | `UserController` | `PUT /api/v1/users/me` | `PROFILE_MANAGE` | U | NOT_STARTED |
-| Đổi mật khẩu | `IMPLEMENTED` | `UserController` | `PUT /api/v1/users/me/password` | đã đăng nhập | U | NOT_STARTED |
-| Admin: danh sách / chi tiết / đổi trạng thái user | `IMPLEMENTED` | `UserController` | `GET /api/v1/users`, `GET /api/v1/users/{id}`, `PUT /api/v1/users/{id}/status` | `USER_STORE_MANAGE` | A | NOT_STARTED |
-| Tạo gian hàng | `IMPLEMENTED` | `StoreController` | `POST /api/v1/stores` | đã đăng nhập (controller không có `@PreAuthorize`; Backend giới hạn mỗi user một gian hàng bằng `STORE_002`) | U | NOT_STARTED |
-| Gian hàng của tôi (xem / sửa) | `IMPLEMENTED` | `StoreController` | `GET` / `PUT /api/v1/stores/my-store` | đã đăng nhập | U | NOT_STARTED |
-| Trang công khai của gian hàng | `IMPLEMENTED` | `StoreController` | `GET /api/v1/stores/{id}` | công khai | U | NOT_STARTED |
-| Admin: danh sách store / đổi trạng thái | `IMPLEMENTED` | `StoreController` | `GET /api/v1/stores`, `PUT /api/v1/stores/{id}/status` | `USER_STORE_MANAGE` | A | NOT_STARTED |
-| Staff: thêm / danh sách / permission / xóa / me | `IMPLEMENTED` | `StoreStaffController` | `POST`, `GET`, `PUT /{staffId}/permissions`, `DELETE /{staffId}`, `GET /me` dưới `/api/v1/stores/my-store/staff` | `STORE_STAFF_MANAGE` | U | NOT_STARTED |
-| Quy trình **mời** staff | `PLANNED` | không có | không có (chỉ có thêm trực tiếp bằng email) | không áp dụng | U | NOT_STARTED |
-| Category: cây / chi tiết | `IMPLEMENTED` | `CategoryController` | `GET /api/v1/categories`, `GET /api/v1/categories/{id}` | công khai | U, A | NOT_STARTED |
-| Category: CRUD cho admin | `IMPLEMENTED` | `CategoryController` | `POST`, `PUT /{id}`, `DELETE /{id}` | `CATEGORY_MANAGE` | A | NOT_STARTED |
-| Product: tạo / sửa / xóa / đổi trạng thái | `IMPLEMENTED` | `ProductController` | `POST /api/v1/products`, `PUT /{id}`, `DELETE /{id}`, `PATCH /{id}/status?status=` | `PRODUCT_CREATE`, `PRODUCT_MANAGE_OWN` | U | NOT_STARTED |
-| Product: danh sách / chi tiết | `IMPLEMENTED` | `ProductController` | `GET /api/v1/products`, `GET /api/v1/products/{id}` | công khai | U, A | NOT_STARTED |
-| Product: tìm kiếm và gợi ý | `IMPLEMENTED` | `ProductController` | `GET /api/v1/products/search`, `GET /api/v1/products/suggest?q=` | công khai | U | NOT_STARTED |
-| Admin kiểm duyệt product | `IMPLEMENTED` | `ProductController` | `PUT /{id}/remove` (body `{ reason }`), `PUT /{id}/restore` | `PRODUCT_MODERATE` | A | NOT_STARTED |
-| Chiến lược định giá của product | `PARTIALLY_IMPLEMENTED` | `ProductService` | enum có `SELLER_SET`, `AUTO_PRICING`, `APPRAISER`; lỗi `PROD_003` ghi "This pricing strategy is not supported yet" | không áp dụng | U | NOT_STARTED |
+| Tính năng | Controller | Endpoint | Xác thực / permission | FE (A) |
+|---|---|---|---|---|
+| Đăng nhập / refresh / logout | `AuthController` | xem 3.1 (`X-Moldy-Auth: 1` + cookie) | công khai | `NOT_STARTED` |
+| Hồ sơ phiên hiện tại | `UserController` | `GET /api/v1/users/me` | đã đăng nhập (FE kiểm tra `roles.includes('ADMIN')`) | `NOT_STARTED` |
+| Quản lý user | `UserController` | `GET /api/v1/users` (`PagedResponse`), `GET /api/v1/users/{id}`, `PUT /api/v1/users/{id}/status` | `USER_STORE_MANAGE` | `NOT_STARTED` |
+| Quản lý store | `StoreController` | `GET /api/v1/stores` (`PagedResponse`), `GET /api/v1/stores/{id}`, `PUT /api/v1/stores/{id}/status` | `USER_STORE_MANAGE` | `NOT_STARTED` |
+| Kiểm duyệt sản phẩm | `ProductController` | `GET /api/v1/products/search`, `GET /api/v1/products/{id}`, `PUT /api/v1/products/{id}/remove` (`{ reason }`), `PUT /api/v1/products/{id}/restore` | `PRODUCT_MODERATE` (lưu ý: cần xác minh search công khai có trả `REMOVED/HIDDEN` không) | `NOT_STARTED` |
+| Quản lý danh mục | `CategoryController` | `GET /api/v1/categories`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}` (`204 Void`) | `CATEGORY_MANAGE` | `NOT_STARTED` |
 
-### 4.2 Chỉ có ở branch chưa merge (`IN_PROGRESS`)
+### 4.2 Endpoints Admin sau MVP (đã merge trên `main` / local, cần Audit trước khi nối)
 
-| Tính năng | Branch | Endpoint | Xác thực quan sát được | Dùng bởi | FE |
-|---|---|---|---|---|---|
-| Notification | `feature/notification`, `feature/cart`, `integration/demo` | `GET /api/v1/notifications?limit&token`, `GET /{id}`, `PATCH /{id}/read`, `DELETE /{id}` (xóa mềm), `PATCH /{id}/restore` | chỉ cần đăng nhập | U | NOT_STARTED |
-| Chat REST | Bản mới nhất ở `feature/chat` (`68b87cb`) và `feature/order`. Bản cũ hơn ở `feature/cart`, `integration/demo` (chưa có `PATCH .../read`). | `POST /api/v1/conversations`, `GET /api/v1/conversations`, `GET /api/v1/conversations/{id}/messages`, `PATCH /api/v1/conversations/{id}/read` | chỉ cần đăng nhập | U | NOT_STARTED |
-| Chat WebSocket | như trên | xem mục 5.2 | JWT trong header của STOMP CONNECT | U | NOT_STARTED |
-| Checkout (tạo checkout group, order, payment trong một lần gọi) | `feature/order` (`feature/payment` cùng commit) | `POST /api/v1/checkout-groups` | đã đăng nhập, không có `@PreAuthorize` | U | NOT_STARTED |
-| Xem checkout group | `feature/order` | `GET /api/v1/checkout-groups/{id}` (chỉ người mua) | đã đăng nhập | U | NOT_STARTED |
-| Order của người mua | `feature/order` | `GET /api/v1/orders/me`, `GET /api/v1/orders/{orderId}` (**không kiểm tra chủ sở hữu**, B11) | đã đăng nhập | U | NOT_STARTED |
-| Admin xác nhận đã thu tiền COD | `feature/order` | `POST /api/v1/orders/admin/{orderId}/cod-collected` (chuyển `DELIVERED` sang `COMPLETED`) | `@IsAdmin` | A | NOT_STARTED |
-| Xem payment | `feature/order` | `GET /api/v1/payments/my-payments`, `GET /api/v1/payments/{id}` (chỉ người trả tiền) | đã đăng nhập | U | NOT_STARTED |
-| Webhook SePay | `feature/order` | `POST /api/v1/payment_transactions/webhook/sepay` | công khai, xác thực bằng chữ ký HMAC. **Chỉ SePay gọi.** | không ai (server-to-server) | không áp dụng |
-| Cart | `feature/cart` | `GET /api/v1/carts`, `/summary`, `/by-seller`, `POST /items`, `PATCH /items/{listingId}`, `DELETE /items/{listingId}`, `DELETE /api/v1/carts`, `GET /items/{listingId}/exists`, `GET /items/count` | chỉ cần đăng nhập | U | NOT_STARTED |
-| Số dư ví | `feature/escrow-wallet`, `feature/cart`, `integration/demo` | `GET /api/v1/wallets/{userId}/balance` | chỉ cần đăng nhập (xem B2) | U | NOT_STARTED |
-| Escrow | như trên | `POST /api/v1/escrows/hold`, `POST /orders/{orderId}/capture`, `POST /orders/{orderId}/release` | chỉ cần đăng nhập (xem B2) | A (và dùng nội bộ) | NOT_STARTED |
-| Rút tiền | như trên | `POST /api/v1/withdrawals`, `PATCH /{id}/approve`, `/complete`, `/reject`, `/fail` | chỉ cần đăng nhập (xem B2) | U (gửi yêu cầu), A (xử lý) | NOT_STARTED |
-| Voucher | `feature/voucher`, `feature/cart`, `integration/demo` | `GET /api/vouchers/{code}`, `POST/GET /api/admin/vouchers`, `GET /api/admin/vouchers/{code}` | `GET /api/vouchers/**` công khai; đường dẫn admin chỉ cần đăng nhập | U, A | NOT_STARTED |
-| Auto pricing | `feature/pricing`, `feature/cart`, `integration/demo` | `POST /api/pricing/auto` | chỉ cần đăng nhập | U | NOT_STARTED |
-| Reference price | như trên | `GET/POST /api/admin/reference-prices`, `GET/PUT/DELETE /{id}` | chỉ cần đăng nhập | A | NOT_STARTED |
-| Hồ sơ appraiser | `feature/cart` | `POST /api/pricing/appraiser/apply`, `GET /me`, `GET /{id}`, `GET /list`, `GET /api/admin/appraisers`, `PUT /api/admin/appraisers/{id}/approve`, `PUT .../suspend` | chỉ cần đăng nhập | U, A | NOT_STARTED |
-| Yêu cầu thẩm định | `feature/cart` | `POST /api/pricing/appraiser/request`, `GET /queue`, `POST /{requestId}/claim`, `/submit`, `/accept`, `/reject`, `GET /api/pricing/requests/{requestId}`, `GET /api/pricing/{listingId}` | chỉ cần đăng nhập | U | NOT_STARTED |
+| Tính năng | Controller | Endpoint | Xác thực quan sát được & Lưu ý | FE (A) |
+|---|---|---|---|---|
+| Giao hàng & thu COD | `OrderController` | `PATCH /api/v1/orders/admin/{orderId}/start-shipping`, `PATCH .../mark-delivered`, `POST .../cod-collected` | `@IsAdmin`; **chưa có API danh sách order toàn hệ thống** | `NOT_STARTED` |
+| Quản lý Appraiser | `AdminAppraiserController` | `GET /api/v1/admin/appraisers` (`status?`), `GET /pending`, `GET /{id}/status`, `PATCH /{id}/{approve,reject,suspend,resume}` | `@PreAuthorize("hasRole('ADMIN')")` (thay thế `/api/admin/appraisers` cũ) | `NOT_STARTED` |
+| Voucher hệ thống | `VoucherController` | `POST/GET /api/admin/vouchers`, `GET /api/admin/vouchers/{code}` | `@IsAdmin` | `NOT_STARTED` |
+| Reference Price | `ReferencePriceController` | `GET/POST /api/admin/reference-prices` (Spring `Page`), `GET/PUT/DELETE /{id}` | `@IsAdmin` | `NOT_STARTED` |
+| Escrow & Rút tiền | `EscrowController`, `WithdrawalController` | `/api/v1/escrows/{hold,orders/{id}/capture,orders/{id}/release}`, `PATCH /api/v1/withdrawals/{id}/{approve,complete,reject,fail}` | **B2 MỞ:** chỉ yêu cầu `authenticated()`, chưa có `@PreAuthorize` | `NOT_STARTED` |
+| File Storage (Presigned URL) | `FileController` | `/api/v1/files/{presigned-url,{id}/confirm,{id}/download-url,{id}}` | đã đăng nhập; trả **RAW JSON** (không bọc `ApiResponse`) | `NOT_STARTED` |
 
-Đã đọc DTO của notification, chat, cart, escrow, trạng thái withdrawal và voucher (mục 5). **DTO của pricing, appraiser, wallet và withdrawal chưa được audit.** Chưa được viết service code cho các mục này.
-
-### 4.3 Không tìm thấy ở bất kỳ branch nào đã đọc
+### 4.3 Chưa có API (`NOT_FOUND` / `REQUIRES_BUSINESS_CLARIFICATION`)
 
 | Tính năng | Trạng thái | Bằng chứng |
 |---|---|---|
-| Order phía người bán (xác nhận, giao hàng, huỷ, danh sách order của gian hàng) và người mua xác nhận đã nhận hàng hoặc huỷ order | `NOT_FOUND` | Enum `OrderStatus` có `CONFIRMED`, `SHIPPING`, `DELIVERED`, `CANCELLED`, `EXPIRED`... nhưng không code nào chuyển sang các trạng thái này, ngoại trừ `DELIVERED` sang `COMPLETED` do admin. Code có ghi chú `//todo: shipping simulator`. File `order-lifecycle.md` trên `main` rỗng (0 byte). |
+| Danh sách order toàn hệ thống cho admin | `NOT_FOUND` | Chỉ có `/orders/me` (buyer) và `/stores/{storeId}/orders` (store) |
+| Thống kê dashboard admin, báo cáo/vi phạm, cấu hình hệ thống | `NOT_FOUND` | Không có controller |
+| Yêu cầu và duyệt refund / dispute | `NOT_FOUND` / `REQUIRES_BUSINESS_CLARIFICATION` | `Refund` rỗng, `DisputeRequest` mới chỉ có entity |
 | Cập nhật trạng thái order và checkout group sau khi thanh toán thành công, và tự động hết hạn | `NOT_FOUND` | Chỉ `Payment` được cập nhật. `PaymentCompletedEvent` được phát nhưng không có listener nào. `CheckoutGroup.markPaid()` và `markExpired()` có định nghĩa nhưng không ai gọi. Không thấy job `@Scheduled` nào. Xem B12. |
 | Offer / thương lượng / counteroffer | `NOT_FOUND` | Không có code offer. `offer-negotiation.md` rỗng. Giới hạn số vòng chưa biết. |
 | Yêu cầu và duyệt refund | `NOT_FOUND` dưới dạng API. Class `Refund` (trên `feature/order`) hiện **rỗng**, không có trường nào. Module escrow có `DisputeOutcome { PAY_SELLER, REFUND_BUYER }` và trạng thái `DISPUTED`, nhưng chưa controller nào mở refund hay dispute ra ngoài. | Xem các endpoint escrow ở 4.2. |
@@ -486,6 +445,12 @@ OrderResponse {
 ---
 
 ## 8. Bảo trì tài liệu
+
+### Ghi nhận khi bàn giao Admin — 2026-11-21
+
+Decision update sau khi Chu trả lời “duyệt 4 điểm” ngày 2026-11-21: MVP Admin theo thứ tự auth/ADMIN guard → users → stores → product moderation → categories; các module khác để sau contract audit. Chưa cho admin bypass email OTP để kích hoạt PENDING_VERIFICATION; admin UI không có action thay xác minh email. Đây là BUSINESS_APPROVED, chưa audit/sửa enforcement admin status endpoint trong task này. Appraiser bị chặn hàng của bản thân/shop sở hữu/shop đang làm staff, Backend implementation/test pending. Baseline sẽ review/tách commit và trình duyệt trước commit/push; chưa có shared baseline commit mới.
+
+Xem [HANDOFF-ADMIN-FRONTEND.md](HANDOFF-ADMIN-FRONTEND.md). Snapshot auth/token/OTP cũ trong tài liệu và AGENTS phải đọc cùng decision cập nhật: access token localStorage theo namespace từng app, refresh HttpOnly cookie Backend set; email OTP hợp lệ kích hoạt ngay, user tự login. Không mặc định admin duyệt mọi đăng ký mới. Đã đối chiếu scoped local Backend `dc11b09`: UserSummaryResponse không có roles, UpdateUserStatusRequest là {status}; PaginationConfig request Pageable 1-based và PagedResponse.page 1-based. OrderController hiện có @IsAdmin PATCH /api/v1/orders/admin/{orderId}/start-shipping, PATCH .../mark-delivered và POST .../cod-collected; chưa xác minh nguồn admin order-list/detail nên không dùng buyer/store API thay thế. Appraisal hiện là module requests/applications/invitations/assignments/reports/reviews, application không phải hồ sơ xin role Appraiser. Các ghi nhận source này chưa phải HTTP/security audit đầy đủ hoặc trạng thái Frontend INTEGRATED; cần cập nhật từng contract trong task triển khai. Không sửa Backend trong lần bàn giao.
 
 - Cập nhật tài liệu này **trong cùng Pull Request** mỗi khi một branch Backend được merge hoặc một Frontend service được thêm.
 - Khi một dòng đổi trạng thái, ghi lại commit hoặc PR của Backend làm căn cứ.
