@@ -8,6 +8,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export const apiServer = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,8 +17,10 @@ export const apiServer = axios.create({
 //prevents refresh requests from triggering
 const refreshServer = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-Moldy-Auth': '1',
   }
 });
 let refreshPromise = null;
@@ -45,16 +48,11 @@ apiServer.interceptors.response.use(
     return body
   },
   async (error) => {
-    const originalRequest = error.config
-
-    console.log('401 interceptor:', {
-      url: originalRequest?.url,
-      status: error.response?.status,
-    });
+    const originalRequest = error.config;
 
 
     if (!originalRequest || error.response?.status !== 401) {
-      return Promise.reject(createApiError(error))
+      return Promise.reject(createApiError(error));
     }
 
     // Don't refresh login or refresh-token requests.
@@ -90,34 +88,17 @@ apiServer.interceptors.response.use(
 // Perform exactly one refresh operation at a time.
 async function refreshAccessToken() {
   try {
-    const { refreshToken, updateTokens } =
-      useAuthStore.getState()
+    const {updateTokens} = useAuthStore.getState();
 
-    if (!refreshToken) {
-      throw new Error('No refresh token available')
+    const response = await refreshServer.post('/auth/refresh');
+
+    const newAccessToken = response.data?.data?.accessToken;
+    if(!newAccessToken){
+      throw new Error('Invalid refresh token response');
     }
+    updateTokens({accessToken: newAccessToken});
 
-    const response = await refreshServer.post(
-      '/auth/refresh',
-      { refreshToken },
-    )
-
-    const data = response.data?.result ?? response.data
-
-    if (!data?.accessToken) {
-      throw new Error('Invalid refresh token response')
-    }
-
-    const newAccessToken = data.accessToken
-    const newRefreshToken = data.refreshToken || refreshToken
-
-    // Synchronize Zustand and persisted state.
-    updateTokens({
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    })
-
-    return newAccessToken
+    return newAccessToken;
   } catch (error) {
     // Clear authentication only once, after refresh fails.
     useAuthStore.getState().logout()

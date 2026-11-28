@@ -241,9 +241,9 @@
     @apply pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground;
   }
 
-  .admin-search-input {
-    @apply pl-8;
-  }
+  .kn-input.admin-search-input {
+     @apply pl-8;
+   }
 
   .admin-status-badge {
     @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap;
@@ -252,6 +252,31 @@
   .admin-status-badge[data-tone='success'] {
     @apply border-success/30 bg-success/10 text-success;
   }
+  .admin-alert-warning{
+    @apply border-warning/30 bg-warning/10 text-warning;
+  }
+
+  /* --- Users management --- */
+  .admin-filter-group {
+    @apply flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center;
+  }
+
+  .admin-select{
+    @apply w-full sm:w-44;
+  }
+
+  .admin-pagination {
+    @apply flex flex-col items-center justify-between gap-2 text-sm text-muted-foreground sm:flex-row;
+  }
+
+  .admin-timeline{
+    @apply grid gap-4;
+  }
+
+  .admin-timeline-item{
+    @apply relative border-l-2 border-border pl-4;
+  }
+
 
   .admin-status-badge[data-tone='warning'] {
     @apply border-warning/30 bg-warning/10 text-warning;

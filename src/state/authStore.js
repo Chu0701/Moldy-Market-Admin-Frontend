@@ -35,10 +35,7 @@ export const useAuthStore = create(
           const profile = await authApi.getMyProfile()
 
           const roles = profile.roles || []
-          const isAdmin =
-            roles.includes('ADMIN') ||
-            roles.includes('ROLE_ADMIN') ||
-            roles.includes('OWNER')
+          const isAdmin = roles.includes('ADMIN') || roles.includes('ROLE_ADMIN');
 
           if (!isAdmin) {
             get().logout()
@@ -86,6 +83,10 @@ export const useAuthStore = create(
           throw error
         }
       },
+      //update access token after refreshing
+      updateTokens: ({accessToken}) => {
+        set({accessToken, isAuthenticated: Boolean(accessToken)});
+      },
 
       /**
        * Clear state and log out
@@ -100,17 +101,12 @@ export const useAuthStore = create(
         })
         localStorage.removeItem('moldy_admin_auth')
       },
-
       /**
        * Helper to check if current user is an Admin
        */
       isAdmin: () => {
         const roles = get().user?.roles || []
-        return (
-          roles.includes('ADMIN') ||
-          roles.includes('ROLE_ADMIN') ||
-          roles.includes('OWNER')
-        )
+        return roles.includes('ADMIN') || roles.includes('ROLE_ADMIN');
       },
     }),
     {

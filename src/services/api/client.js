@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import { getAccessToken } from '@/lib/tokenStorage'
 import { ApiError } from '@/services/api/ApiError'
+import { useAuthStore } from '@/state/authStore'
 
 export const apiClient = axios.create({
   // Services supply the complete path because Backend uses both /api/v1 and /api.
@@ -13,7 +13,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   if (config.url?.startsWith('/api/v1/auth/')) return config
 
-  const accessToken = getAccessToken()
+  const accessToken = useAuthStore.getState().accessToken;
 
   if (accessToken && !config.headers.has('Authorization')) {
     config.headers.set('Authorization', `Bearer ${accessToken}`)

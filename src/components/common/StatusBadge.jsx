@@ -28,6 +28,15 @@ const TONE_MAP = {
     PLATFORM: 'info',
     STORE: 'muted',
   },
+  user: {
+    ACTIVE: 'success',
+    LOCKED: 'destructive',
+    PENDING_VERIFICATION: 'warning',
+  },
+  store: {
+    ACTIVE: 'success',
+    BLOCKED: 'destructive',
+  },
 }
 
 const I18N_PREFIX = {
@@ -35,11 +44,13 @@ const I18N_PREFIX = {
   withdrawal: 'withdrawals.status',
   voucher: 'vouchers.status',
   issuer: 'vouchers.issuer',
+  user: 'users.status',
+  store: 'users.storeStatus',
 }
 
 /**
  * @param {{
- *   type: 'dispute' | 'withdrawal' | 'voucher' | 'issuer',
+ *   type: 'dispute' | 'withdrawal' | 'voucher' | 'issuer' | 'user' | 'store',
  *   value?: string | null,
  *   className?: string
  * }} props

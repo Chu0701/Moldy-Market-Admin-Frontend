@@ -25,7 +25,8 @@
     "dashboard": "Overview",
     "disputes": "Disputes & refunds",
     "withdrawals": "Withdrawals",
-    "vouchers": "Platform vouchers"
+    "vouchers": "Platform vouchers",
+    "users": "Users"
   },
   "dashboard": {
     "title": "Admin workspace",
@@ -278,6 +279,104 @@
       "expiredAtFuture": "Expiry date must be in the future.",
       "minOrderNonNegative": "Minimum order value cannot be negative.",
       "maxDiscountPositive": "Maximum discount must be greater than 0."
+    }
+  },
+  "users": {
+    "title": "User management",
+    "subtitle": "Search, view and lock / unlock violating accounts.",
+    "searchPlaceholder": "Search by name, email or phone",
+    "loadError": "Could not load users",
+    "emptyTitle": "No matching users",
+    "emptyDescription": "Try a different keyword or filter.",
+    "lockSuccess": "Locked {{name}}'s account.",
+    "unlockSuccess": "Unlocked {{name}}'s account.",
+    "filters": {
+      "status": "Filter by status",
+      "role": "Filter by role",
+      "allStatuses": "All statuses",
+      "allRoles": "All roles"
+    },
+    "columns": {
+      "user": "User",
+      "phone": "Phone",
+      "roles": "Roles",
+      "status": "Status",
+      "trustPoints": "Trust points",
+      "createdAt": "Created",
+      "action": "Actions"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "LOCKED": "Locked",
+      "PENDING_VERIFICATION": "Pending email verification"
+    },
+    "storeStatus": {
+      "ACTIVE": "Active",
+      "BLOCKED": "Blocked"
+    },
+    "roles": {
+      "USER": "User",
+      "OWNER": "Store owner",
+      "STAFF": "Staff",
+      "APPRAISER": "Appraiser",
+      "ADMIN": "Admin"
+    },
+    "actions": {
+      "lock": "Lock",
+      "unlock": "Unlock",
+      "viewNamed": "View {{name}}"
+    },
+    "lockReasons": {
+      "SPAM": "Spam",
+      "SCAM": "Scam / fraud",
+      "PROHIBITED_ITEMS": "Prohibited items",
+      "HARASSMENT": "Harassment",
+      "FAKE_ACCOUNT": "Fake account",
+      "OTHER": "Other"
+    },
+    "dialog": {
+      "lock": {
+        "title": "Lock account",
+        "description": "Lock {{name}} ({{email}}). They will be signed out and cannot sign in until unlocked.",
+        "presetLabel": "Violation type",
+        "presetPlaceholder": "Choose a violation type",
+        "detailLabel": "Violation details",
+        "detailPlaceholder": "e.g. Posted 30 duplicate listings within 1 hour",
+        "ownsStore": "This user owns the store \"{{store}}\". The store will not be blocked automatically.",
+        "openOrders": "This user has {{count}} orders in progress. They will continue."
+      },
+      "unlock": {
+        "title": "Unlock account",
+        "description": "Unlock {{name}} ({{email}}). They will be able to sign in again.",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "e.g. Information re-verified"
+      }
+    },
+    "validation": {
+      "presetRequired": "Please choose a violation type.",
+      "detailRequired": "Please describe the violation (at least 5 characters).",
+      "detailTooLong": "Description is too long.",
+      "noteTooLong": "Note must be at most 500 characters."
+    },
+    "pagination": {
+      "label": "Pagination",
+      "summary": "Page {{page}}/{{totalPages}} · {{total}} users",
+      "pageOnly": "Page {{page}}",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "detail": {
+      "backToList": "Back to list",
+      "loadError": "Could not load user",
+      "infoTitle": "Account information",
+      "userId": "User ID",
+      "ownedStore": "Owned store",
+      "address": "Address",
+      "lockedBanner": "This account is locked",
+      "openOrdersWarning": "Orders in progress: {{buyer}} as buyer, {{seller}} as seller.",
+      "historyTitle": "Lock / unlock history",
+      "historyEmpty": "No history yet.",
+      "historyBy": "By {{name}} · {{time}}"
     }
   }
 }

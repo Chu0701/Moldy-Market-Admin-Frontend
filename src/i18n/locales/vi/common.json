@@ -25,7 +25,8 @@
     "dashboard": "Tổng quan",
     "disputes": "Khiếu nại & hoàn tiền",
     "withdrawals": "Duyệt rút tiền",
-    "vouchers": "Voucher toàn sàn"
+    "vouchers": "Voucher toàn sàn",
+    "users": "Người dùng"
   },
   "dashboard": {
     "title": "Khu vực quản trị",
@@ -278,6 +279,104 @@
       "expiredAtFuture": "Thời điểm hết hạn phải ở trong tương lai.",
       "minOrderNonNegative": "Đơn tối thiểu không được âm.",
       "maxDiscountPositive": "Mức giảm tối đa phải lớn hơn 0."
+    }
+  },
+  "users": {
+    "title": "Quản lý người dùng",
+    "subtitle": "Tìm kiếm, xem chi tiết và khóa / mở khóa tài khoản vi phạm.",
+    "searchPlaceholder": "Tìm theo tên, email hoặc SĐT",
+    "loadError": "Không tải được danh sách người dùng",
+    "emptyTitle": "Không có người dùng phù hợp",
+    "emptyDescription": "Thử đổi từ khóa hoặc bộ lọc.",
+    "lockSuccess": "Đã khóa tài khoản {{name}}.",
+    "unlockSuccess": "Đã mở khóa tài khoản {{name}}.",
+    "filters": {
+      "status": "Lọc theo trạng thái",
+      "role": "Lọc theo vai trò",
+      "allStatuses": "Tất cả trạng thái",
+      "allRoles": "Tất cả vai trò"
+    },
+    "columns": {
+      "user": "Người dùng",
+      "phone": "Số điện thoại",
+      "roles": "Vai trò",
+      "status": "Trạng thái",
+      "trustPoints": "Điểm uy tín",
+      "createdAt": "Ngày tạo",
+      "action": "Thao tác"
+    },
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "LOCKED": "Đã khóa",
+      "PENDING_VERIFICATION": "Chờ xác minh email"
+    },
+    "storeStatus": {
+      "ACTIVE": "Đang hoạt động",
+      "BLOCKED": "Đã chặn"
+    },
+    "roles": {
+      "USER": "Người dùng",
+      "OWNER": "Chủ shop",
+      "STAFF": "Nhân viên",
+      "APPRAISER": "Thẩm định viên",
+      "ADMIN": "Quản trị viên"
+    },
+    "actions": {
+      "lock": "Khóa",
+      "unlock": "Mở khóa",
+      "viewNamed": "Xem chi tiết {{name}}"
+    },
+    "lockReasons": {
+      "SPAM": "Spam",
+      "SCAM": "Lừa đảo",
+      "PROHIBITED_ITEMS": "Đăng hàng cấm",
+      "HARASSMENT": "Quấy rối",
+      "FAKE_ACCOUNT": "Tài khoản giả",
+      "OTHER": "Khác"
+    },
+    "dialog": {
+      "lock": {
+        "title": "Khóa tài khoản",
+        "description": "Khóa tài khoản {{name}} ({{email}}). Người dùng sẽ bị đăng xuất và không thể đăng nhập cho tới khi được mở khóa.",
+        "presetLabel": "Loại vi phạm",
+        "presetPlaceholder": "Chọn loại vi phạm",
+        "detailLabel": "Mô tả vi phạm",
+        "detailPlaceholder": "Ví dụ: Đăng 30 tin trùng lặp trong 1 giờ",
+        "ownsStore": "Người dùng này là chủ gian hàng \"{{store}}\". Gian hàng sẽ không bị chặn tự động.",
+        "openOrders": "Người dùng còn {{count}} đơn hàng đang xử lý. Các đơn này vẫn tiếp tục."
+      },
+      "unlock": {
+        "title": "Mở khóa tài khoản",
+        "description": "Mở khóa tài khoản {{name}} ({{email}}). Người dùng có thể đăng nhập lại.",
+        "noteLabel": "Ghi chú (không bắt buộc)",
+        "notePlaceholder": "Ví dụ: Đã xác minh lại thông tin"
+      }
+    },
+    "validation": {
+      "presetRequired": "Vui lòng chọn loại vi phạm.",
+      "detailRequired": "Vui lòng mô tả vi phạm (ít nhất 5 ký tự).",
+      "detailTooLong": "Mô tả quá dài.",
+      "noteTooLong": "Ghi chú tối đa 500 ký tự."
+    },
+    "pagination": {
+      "label": "Phân trang",
+      "summary": "Trang {{page}}/{{totalPages}} · {{total}} người dùng",
+      "pageOnly": "Trang {{page}}",
+      "prev": "Trước",
+      "next": "Sau"
+    },
+    "detail": {
+      "backToList": "Quay lại danh sách",
+      "loadError": "Không tải được thông tin người dùng",
+      "infoTitle": "Thông tin tài khoản",
+      "userId": "Mã người dùng",
+      "ownedStore": "Gian hàng sở hữu",
+      "address": "Địa chỉ",
+      "lockedBanner": "Tài khoản đang bị khóa",
+      "openOrdersWarning": "Còn đơn hàng đang xử lý: {{buyer}} đơn với vai trò người mua, {{seller}} đơn với vai trò người bán.",
+      "historyTitle": "Lịch sử khóa / mở khóa",
+      "historyEmpty": "Chưa có lịch sử.",
+      "historyBy": "Bởi {{name}} · {{time}}"
     }
   }
 }

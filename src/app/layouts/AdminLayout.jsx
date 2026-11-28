@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router'
 import {
   LayoutDashboard,
@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   AlertTriangle,
   Wallet,
+  TicketPercent,
   LogOut,
   Menu,
   X,
@@ -57,9 +58,15 @@ const NAV_ITEMS = [
     badge: 'Urgent',
   },
   {
-    title: 'Finance & Payouts',
-    href: '/finance',
+    title: 'Withdrawals',
+    href: '/withdrawals',
     icon: Wallet,
+    badge: null,
+  },
+  {
+    title: 'Vouchers',
+    href: '/vouchers',
+    icon: TicketPercent,
     badge: null,
   },
 ]
