@@ -1,5 +1,7 @@
 # Bàn giao Frontend Admin — Moldy Market
 
+> **Cập nhật tiến độ 27/11/2026 (`main` `b285031`):** Repo Admin đã vượt qua giai đoạn scaffold — đã có `AppProviders`, `AdminLayout` (tạm mở chưa bật `/login` theo yêu cầu test nhanh của Chu), API layer (`moldy-market:admin:access-token`), hệ thống CSS `@layer components`, shared UI components và hoàn chỉnh **Group 2** (`/disputes`, `/disputes/:disputeId`, `/withdrawals`, `/vouchers`, 6/6 file test pass, build pass). Việc tiếp theo là bổ sung `/login` + `RequireAdmin` và **Group 1 MVP** (`/users`, `/stores`, `/products`, `/categories`). Xem thêm `admin/AGENTS.md` và `CODEX_HANDOFF.md` ở repo Backend.
+
 > Cập nhật phát hành 22/11/2026: Chu đã yêu cầu commit và push bản mới nhất lên main của cả 3 repo. Quy tắc “chưa được commit/push” bên dưới ghi lại thời điểm duyệt 4 quyết định ngày 21/11, không hủy ủy quyền phát hành mới này. Baseline và exact code refs được ghi tại [SHARED-BASELINE.md](https://github.com/Chu0701/Moldy-Market-User-Frontend/blob/main/Moldy-Market-User-Frontend/docs/SHARED-BASELINE.md); chỉ dùng sau khi xác nhận main remote đã có commit tương ứng.
 
 Ngày đối chiếu: 21/11/2026. Người phụ trách: dev Frontend Admin. Owner quyết định nghiệp vụ: Chu.
